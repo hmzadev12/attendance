@@ -1,124 +1,302 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
 <title>Attendance System</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
+:root{
+  --bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:rgba(255,255,255,0.07);
+  --accent:#3b82f6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--purple:#8b5cf6;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#475569;
+  --font:'IBM Plex Sans Arabic',sans-serif;--mono:'JetBrains Mono',monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Inter',sans-serif;background:#eef2f7;color:#1a1a2e;min-height:100vh;}
-.page{display:none;min-height:100vh;flex-direction:column;}.page.active{display:flex;}
-.header{background:#2c3e50;color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:600;flex-shrink:0;}
-.back-btn{font-size:24px;cursor:pointer;background:none;border:none;color:white;padding:4px 10px;font-family:'Inter',sans-serif;touch-action:manipulation;}
-.sub-header{background:#f7f9fc;padding:13px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #dde3ea;}
-.you{font-size:14px;font-weight:700;color:#1e293b;}
-.stats-bar{background:#dbeafe;margin:14px 12px 0;border-radius:10px;padding:14px 18px;}
-.counts{font-size:14px;color:#1e3a5f;}.counts b{font-weight:700;}
-.status-msg{text-align:center;font-size:15px;padding:12px 16px 4px;min-height:36px;font-weight:500;color:#475569;}
-.content{padding:4px 12px 30px;display:flex;flex-direction:column;}
-.btn-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:20px;}
-.action-btn{width:100%;padding:22px 20px;border:none;border-radius:12px;font-size:20px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Inter',sans-serif;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
-.btn-reg{background:#2563eb;color:white;}.btn-checkin{background:#16a34a;color:white;}
-.btn-checkout{background:#fef3e2;color:#2c3e50;border:1.5px solid #e9d5b0;}
-.btn-sub{font-size:13px;color:#64748b;margin-top:6px;font-style:italic;}
-.reg-page-body{padding:20px 16px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;flex:1;}
-.form-group{display:flex;flex-direction:column;gap:6px;}
-.form-group label{font-size:14px;font-weight:600;color:#374151;}
-.form-group input{padding:14px 16px;font-size:16px;border-radius:10px;border:1.5px solid #cbd5e1;background:white;color:#1e293b;outline:none;font-family:'Inter',sans-serif;}
-.submit-btn{width:100%;padding:18px;font-size:18px;font-weight:700;background:#2563eb;color:white;border:none;border-radius:12px;cursor:pointer;font-family:'Inter',sans-serif;touch-action:manipulation;}
-.scanner-top-row{display:flex;gap:12px;align-items:center;padding:12px 16px;justify-content:space-between;flex-shrink:0;}
-.scanner-mode-badge{padding:8px 20px;border-radius:20px;font-size:15px;font-weight:700;color:white;}
-.mode-in{background:#16a34a;}.mode-out{background:#d97706;}
-.scan-counter{background:#1e293b;color:white;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:600;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+.page{display:none;min-height:100vh;flex-direction:column;}
+.page.active{display:flex;}
+
+/* HEADER */
+.header{background:rgba(17,24,39,0.97);backdrop-filter:blur(12px);color:var(--text);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:600;flex-shrink:0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+.back-btn{cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:8px;font-family:var(--font);font-size:15px;}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;max-width:160px;}
+.role-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.role-dot.admin{background:var(--purple);}
+.role-dot.guard{background:var(--green);}
+.badge-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ===== LOGIN ===== */
+.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;gap:0;}
+.login-logo{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,#1e3a5f,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 8px 32px rgba(59,130,246,0.3);margin-bottom:24px;}
+.login-title{font-size:26px;font-weight:700;text-align:center;margin-bottom:8px;}
+.login-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:36px;}
+.login-form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:16px;}
+.input-wrap{position:relative;}
+.input-wrap input{width:100%;padding:18px 52px 18px 18px;font-size:18px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);outline:none;font-family:var(--font);letter-spacing:2px;text-align:center;}
+.input-wrap input:focus{border-color:var(--accent);}
+.input-wrap input::placeholder{color:var(--text3);letter-spacing:0;}
+.show-pass-btn{position:absolute;left:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:4px;line-height:1;}
+.login-btn{width:100%;padding:18px;font-size:17px;font-weight:700;background:var(--accent);color:white;border:none;border-radius:14px;cursor:pointer;font-family:var(--font);transition:opacity 0.15s;}
+.login-btn:active{opacity:0.85;}
+.login-btn:disabled{opacity:0.5;}
+.login-err{font-size:14px;color:var(--red);text-align:center;min-height:22px;font-weight:600;}
+
+/* ===== MAIN ===== */
+.main-top{padding:24px 20px 0;}
+.greeting{font-size:13px;color:var(--text3);margin-bottom:4px;}
+.main-title{font-size:26px;font-weight:700;}
+.main-title span{color:var(--accent);}
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 20px 0;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,130,246,0.06),transparent);pointer-events:none;}
+.stat-card.green::before{background:linear-gradient(135deg,rgba(16,185,129,0.08),transparent);}
+.stat-num{font-size:36px;font-weight:700;font-family:var(--mono);line-height:1;}
+.stat-label{font-size:12px;color:var(--text2);}
+.stat-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+.stat-card.green .stat-dot{background:var(--green);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.actions{padding:20px;display:flex;flex-direction:column;gap:12px;}
+.action-btn{width:100%;padding:20px;border:1px solid var(--border);border-radius:16px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:14px;font-family:var(--font);background:var(--surface);color:var(--text);position:relative;}
+.action-btn:active{transform:scale(0.98);}
+.btn-arrow{position:absolute;left:18px;font-size:18px;color:var(--text3);}
+.btn-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.btn-reg .btn-icon{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.2);}
+.btn-checkin .btn-icon{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.2);}
+.btn-checkout .btn-icon{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.18);}
+.btn-admin .btn-icon{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.2);}
+.btn-employees .btn-icon{background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);}
+.btn-text{display:flex;flex-direction:column;gap:3px;}
+.btn-main-text{font-size:16px;font-weight:600;}
+.btn-sub-text{font-size:12px;color:var(--text2);}
+.btn-reg{border-color:rgba(59,130,246,0.18);}
+.btn-checkin{border-color:rgba(16,185,129,0.18);}
+.btn-checkout{border-color:rgba(245,158,11,0.14);}
+.btn-admin{border-color:rgba(139,92,246,0.2);}
+.btn-employees{border-color:rgba(6,182,212,0.15);}
+.logout-btn{margin:4px 20px 24px;padding:14px;font-size:15px;font-weight:600;background:transparent;color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:14px;cursor:pointer;font-family:var(--font);}
+
+/* ===== PAGE BODY ===== */
+.page-body{padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;flex:1;}
+.form-group{display:flex;flex-direction:column;gap:8px;}
+.form-group label{font-size:13px;font-weight:600;color:var(--text2);}
+.form-group input{padding:14px 16px;font-size:16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;font-family:var(--font);}
+.form-group input:focus{border-color:var(--accent);}
+.form-group input::placeholder{color:var(--text3);}
+.submit-btn{width:100%;padding:16px;font-size:16px;font-weight:700;background:var(--accent);color:white;border:none;border-radius:14px;cursor:pointer;font-family:var(--font);margin-top:4px;}
+.submit-btn:disabled{opacity:0.5;}
+.submit-btn.green{background:var(--green);}
+.submit-btn.purple{background:var(--purple);}
+.section-title{font-size:12px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid var(--border);}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.card-name{font-size:16px;font-weight:600;}
+.card-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.card-actions{display:flex;gap:8px;flex-shrink:0;}
+.card-edit-btn{padding:7px 14px;font-size:13px;font-weight:600;background:rgba(59,130,246,0.1);color:var(--accent);border:1px solid rgba(59,130,246,0.2);border-radius:10px;cursor:pointer;font-family:var(--font);}
+.card-del-btn{padding:7px 14px;font-size:13px;font-weight:600;background:rgba(239,68,68,0.08);color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:10px;cursor:pointer;font-family:var(--font);}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--text2);}
+.chip.empty{color:var(--text3);font-style:italic;}
+.chip.green{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.2);color:var(--green);}
+.empty-state{text-align:center;color:var(--text3);font-size:14px;padding:30px 0;}
+
+/* SCANNER */
+.scanner-top-row{display:flex;gap:10px;align-items:center;padding:14px 20px;justify-content:space-between;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);}
+.scanner-mode-badge{padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;}
+.mode-in{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.25);}
+.mode-out{background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.22);}
+.scan-counter{background:var(--surface2);color:var(--text2);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;border:1px solid var(--border);}
+.scan-counter b{color:var(--text);}
 #camWrap{position:relative;flex:1;background:#000;overflow:hidden;min-height:0;}
-#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 #camCanvas{display:none;}
 #scanFrame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-#scanFrameBox{width:62vw;height:62vw;max-width:260px;max-height:260px;border:3px solid rgba(255,255,255,0.9);border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,0.5);position:relative;overflow:hidden;}
-#scanFrameBox::before,#scanFrameBox::after{content:'';position:absolute;width:24px;height:24px;border-color:#22d3ee;border-style:solid;}
-#scanFrameBox::before{top:-3px;left:-3px;border-width:4px 0 0 4px;border-radius:4px 0 0 0;}
-#scanFrameBox::after{bottom:-3px;right:-3px;border-width:0 4px 4px 0;border-radius:0 0 4px 0;}
-#scanLine{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#22d3ee,transparent);animation:scanMove 1.6s ease-in-out infinite;}
+#scanFrameBox{width:62vw;height:62vw;max-width:260px;max-height:260px;border:2px solid rgba(255,255,255,0.8);border-radius:20px;box-shadow:0 0 0 2000px rgba(0,0,0,0.55);position:relative;overflow:hidden;}
+#scanFrameBox::before,#scanFrameBox::after{content:'';position:absolute;width:28px;height:28px;border-color:#06b6d4;border-style:solid;}
+#scanFrameBox::before{top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+#scanFrameBox::after{bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+#scanLine{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#06b6d4,transparent);animation:scanMove 1.8s ease-in-out infinite;}
 @keyframes scanMove{0%{top:0}50%{top:calc(100% - 2px)}100%{top:0}}
-#scanResult{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none;}
-#scanResult.ok{display:flex;background:rgba(22,163,74,0.82);}
-#scanResult.err{display:flex;background:rgba(220,38,38,0.82);}
-#scanResultIcon{font-size:68px;line-height:1;}
-#scanResultText{color:white;font-size:18px;font-weight:700;text-align:center;padding:0 20px;line-height:1.4;}
-#camOffOverlay{position:absolute;inset:0;background:linear-gradient(135deg,#1e3a5f,#1d4ed8);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;}
+#scanResult{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:none;}
+#scanResult.ok{display:flex;background:rgba(16,185,129,0.88);}
+#scanResult.err{display:flex;background:rgba(239,68,68,0.88);}
+#scanResultIcon{font-size:64px;line-height:1;}
+#scanResultText{color:white;font-size:17px;font-weight:700;text-align:center;padding:0 24px;line-height:1.45;}
+#camOffOverlay{position:absolute;inset:0;background:linear-gradient(135deg,#0a0f1e,#1a2235);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;cursor:pointer;}
 #camOffOverlay.hidden{display:none;}
-.cam-status-bar{padding:12px 16px;background:white;font-size:15px;font-weight:600;text-align:center;color:#475569;transition:background 0.12s,color 0.12s;min-height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 -2px 8px rgba(0,0,0,0.07);}
-.cam-status-bar.success{background:#dcfce7;color:#16a34a;}
-.cam-status-bar.error{background:#fee2e2;color:#dc2626;}
-.scanner-bottom{padding:12px 16px 20px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
-.divider{width:100%;display:flex;align-items:center;gap:10px;color:#94a3b8;font-size:13px;}
-.divider::before,.divider::after{content:"";flex:1;height:1px;background:#e2e8f0;}
-.manual-box{background:white;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;gap:8px;}
-.manual-box input{flex:1;padding:12px 14px;font-size:15px;border-radius:10px;border:1.5px solid #cbd5e1;background:#f8fafc;color:#1e293b;outline:none;font-family:monospace;}
-.manual-submit{padding:12px 18px;font-size:15px;font-weight:700;background:#2563eb;color:white;border:none;border-radius:10px;cursor:pointer;font-family:'Inter',sans-serif;touch-action:manipulation;white-space:nowrap;}
-.stop-scan-btn{width:100%;padding:14px;font-size:16px;font-weight:700;background:#dc2626;color:white;border:none;border-radius:12px;cursor:pointer;font-family:'Inter',sans-serif;touch-action:manipulation;}
-#flashOverlay{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.07s;}
-#flashOverlay.fs{background:rgba(22,163,74,0.18);opacity:1;}
-#flashOverlay.fe{background:rgba(220,38,38,0.18);opacity:1;}
-.ticket-page-body{padding:20px 16px;display:flex;flex-direction:column;gap:16px;align-items:center;overflow-y:auto;flex:1;}
-.ticket-card{width:100%;max-width:360px;background:white;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.12);display:flex;flex-direction:column;}
-.ticket-header{background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:22px 20px 18px;text-align:center;color:white;}
-.ticket-header .org-name{font-size:12px;opacity:.75;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;}
-.ticket-header .emp-name{font-size:22px;font-weight:700;line-height:1.2;}
-.ticket-header .emp-job{font-size:13px;opacity:.75;margin-top:4px;}
-.ticket-body{padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;}
-.ticket-qr-wrap{background:#f8fafc;border-radius:16px;padding:12px;border:2px solid #e2e8f0;}
-.ticket-id-row{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;}
-.ticket-id-label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;}
-.ticket-id-value{font-size:17px;font-weight:700;color:#1e293b;font-family:monospace;letter-spacing:2px;}
-.ticket-perf{display:flex;align-items:center;position:relative;}
-.ticket-perf::before{content:"";position:absolute;left:-20px;width:20px;height:28px;background:#eef2f7;border-radius:0 14px 14px 0;}
-.ticket-perf::after{content:"";position:absolute;right:-20px;width:20px;height:28px;background:#eef2f7;border-radius:14px 0 0 14px;}
-.ticket-perf-line{flex:1;border-top:2px dashed #e2e8f0;}
-.ticket-footer{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;background:#f8fafc;}
-.ticket-footer .date-label{font-size:11px;color:#94a3b8;}
-.ticket-footer .date-value{font-size:13px;font-weight:600;color:#475569;margin-top:2px;}
-.ticket-valid{background:#dcfce7;color:#16a34a;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;}
+.cam-pulse{width:70px;height:70px;border-radius:50%;background:rgba(59,130,246,0.08);border:2px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-size:30px;animation:camPulse 2s infinite;}
+@keyframes camPulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.3)}50%{box-shadow:0 0 0 14px rgba(59,130,246,0)}}
+.cam-status-bar{padding:14px 20px;background:var(--surface);font-size:14px;font-weight:600;text-align:center;color:var(--text2);min-height:50px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-top:1px solid var(--border);}
+.cam-status-bar.success{background:rgba(16,185,129,0.1);color:var(--green);}
+.cam-status-bar.error{background:rgba(239,68,68,0.08);color:var(--red);}
+.scanner-bottom{padding:14px 20px 24px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;background:var(--bg);}
+.divider{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:12px;}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border);}
+.manual-box{background:var(--surface);border-radius:14px;padding:12px;border:1px solid var(--border);display:flex;gap:8px;}
+.manual-box input{flex:1;padding:12px 14px;font-size:14px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);outline:none;font-family:var(--mono);}
+.manual-box input:focus{border-color:var(--accent);}
+.manual-box input::placeholder{color:var(--text3);}
+.manual-submit{padding:12px 18px;font-size:14px;font-weight:700;background:var(--accent);color:white;border:none;border-radius:10px;cursor:pointer;font-family:var(--font);white-space:nowrap;}
+.stop-scan-btn{width:100%;padding:15px;font-size:15px;font-weight:700;background:rgba(239,68,68,0.08);color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:14px;cursor:pointer;font-family:var(--font);}
+
+/* TICKET */
+.ticket-page-body{padding:24px 20px;display:flex;flex-direction:column;gap:18px;align-items:center;overflow-y:auto;flex:1;}
+.ticket-card{width:100%;max-width:360px;background:var(--surface);border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid var(--border);}
+.ticket-header{background:linear-gradient(135deg,#0f172a,#1e3a5f,#1d4ed8);padding:28px 24px 22px;text-align:center;color:white;position:relative;overflow:hidden;}
+.ticket-header::before{content:'';position:absolute;inset:-50%;background:radial-gradient(circle at 30% 40%,rgba(59,130,246,0.22),transparent 60%);pointer-events:none;}
+.ticket-header .org-name{font-size:10px;opacity:.6;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;}
+.ticket-header .emp-name{font-size:24px;font-weight:700;position:relative;}
+.ticket-header .emp-job{font-size:13px;opacity:.65;margin-top:6px;position:relative;}
+.ticket-body{padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.ticket-qr-wrap{background:white;border-radius:16px;padding:14px;}
+.ticket-id-row{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.ticket-id-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;}
+.ticket-id-value{font-size:16px;font-weight:700;font-family:var(--mono);letter-spacing:1.5px;}
+.ticket-sep{height:1px;background:var(--border);width:calc(100% + 48px);margin:0 -24px;}
+.ticket-footer{padding:16px 24px;display:flex;justify-content:space-between;align-items:center;background:var(--surface2);}
+.ticket-footer .date-label{font-size:10px;color:var(--text3);}
+.ticket-footer .date-value{font-size:13px;font-weight:600;color:var(--text2);margin-top:3px;}
+.ticket-valid{background:rgba(16,185,129,0.1);color:var(--green);padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(16,185,129,0.22);}
 .ticket-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;}
-.ticket-dl-btn{width:100%;padding:15px;font-size:16px;font-weight:700;background:#16a34a;color:white;border:none;border-radius:12px;cursor:pointer;font-family:'Inter',sans-serif;touch-action:manipulation;}
-.ticket-new-btn{width:100%;padding:15px;font-size:16px;font-weight:600;background:white;color:#2563eb;border:2px solid #2563eb;border-radius:12px;cursor:pointer;font-family:'Inter',sans-serif;touch-action:manipulation;}
+.ticket-dl-btn{width:100%;padding:16px;font-size:16px;font-weight:700;background:var(--green);color:white;border:none;border-radius:14px;cursor:pointer;font-family:var(--font);}
+.ticket-new-btn{width:100%;padding:16px;font-size:16px;font-weight:600;background:transparent;color:var(--accent);border:1.5px solid rgba(59,130,246,0.28);border-radius:14px;cursor:pointer;font-family:var(--font);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:none;align-items:flex-end;}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--surface);border-radius:24px 24px 0 0;padding:24px;width:100%;max-height:85vh;overflow-y:auto;border-top:1px solid var(--border);}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px;}
+.modal-form{display:flex;flex-direction:column;gap:14px;margin-bottom:20px;}
+.modal-form .form-group input{background:var(--surface2);}
+.emp-check-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;max-height:240px;overflow-y:auto;}
+.emp-check-item{display:flex;align-items:center;gap:12px;background:var(--surface2);border-radius:12px;padding:14px;border:1px solid var(--border);cursor:pointer;}
+.emp-check-item.selected{border-color:var(--accent);background:rgba(59,130,246,0.08);}
+.emp-check-box{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;font-size:13px;font-weight:700;}
+.emp-check-item.selected .emp-check-box{background:var(--accent);border-color:var(--accent);}
+.emp-check-name{font-size:15px;font-weight:500;}
+.emp-check-id{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.modal-actions{display:flex;gap:10px;}
+.modal-cancel{flex:1;padding:14px;font-size:15px;font-weight:600;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-family:var(--font);}
+.modal-save{flex:2;padding:14px;font-size:15px;font-weight:700;background:var(--accent);color:white;border:none;border-radius:12px;cursor:pointer;font-family:var(--font);}
+.modal-save.red{background:var(--red);}
+
+/* FLASH */
+#flashOverlay{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.08s;}
+#flashOverlay.fs{background:rgba(16,185,129,0.14);opacity:1;}
+#flashOverlay.fe{background:rgba(239,68,68,0.14);opacity:1;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.page.active>*{animation:fadeUp 0.25s ease both;}
+.page.active>*:nth-child(2){animation-delay:.05s;}
+.page.active>*:nth-child(3){animation-delay:.1s;}
 </style>
 </head>
 <body>
 <div id="flashOverlay"></div>
 
-<!-- PAGE 1 -->
-<div class="page active" id="page-main">
-  <div class="header"><span>Attendance System</span></div>
-  <div class="sub-header"><div class="you">&#128100; YOU</div><span style="color:#2563eb;font-size:13px;">Search</span></div>
-  <div class="stats-bar"><div class="counts"><b id="attendeesCount">0</b> attendees &nbsp;|&nbsp; <b id="checkinsCount">0</b> check-ins</div></div>
-  <div class="status-msg" id="main-status">جاهز للتسجيل</div>
-  <div class="content">
-    <div class="btn-wrap"><button class="action-btn btn-reg" id="b1">&#128396; On-the-spot Registration</button><span class="btn-sub">Code generation is active</span></div>
-    <div class="btn-wrap"><button class="action-btn btn-checkin" id="b2">&#10003; Check-in</button><span class="btn-sub" id="checkinSub">0</span></div>
-    <div class="btn-wrap"><button class="action-btn btn-checkout" id="b3">Check-out</button><span class="btn-sub">0</span></div>
+<!-- ===== LOGIN ===== -->
+<div class="page active" id="page-login">
+  <div class="header">
+    <span>نظام الحضور</span>
+    <span style="font-size:11px;color:var(--text3);font-family:var(--mono);">v2.0</span>
+  </div>
+  <div class="login-wrap">
+    <div class="login-logo">🏢</div>
+    <div class="login-title">مرحباً</div>
+    <div class="login-sub">أدخل كلمة المرور للدخول</div>
+    <div class="login-form">
+      <div class="input-wrap">
+        <input type="password" id="loginPassword" placeholder="● ● ● ● ● ●" autocomplete="off">
+        <button class="show-pass-btn" id="showLoginPass" type="button">👁</button>
+      </div>
+      <div class="login-err" id="loginErr"></div>
+      <button class="login-btn" id="bLogin">دخول</button>
+    </div>
   </div>
 </div>
 
-<!-- PAGE 2 -->
+<!-- ===== MAIN ===== -->
+<div class="page" id="page-main">
+  <div class="header">
+    <span>لوحة التحكم</span>
+    <div class="user-badge">
+      <div class="role-dot" id="headerRoleDot"></div>
+      <span class="badge-name" id="headerUserName">—</span>
+    </div>
+  </div>
+  <div class="main-top">
+    <div class="greeting" id="mainGreeting">مرحباً 👋</div>
+    <div class="main-title">لوحة <span>التحكم</span></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-dot"></div><div class="stat-num" id="attendeesCount">—</div><div class="stat-label">الموظفين</div></div>
+    <div class="stat-card green"><div class="stat-dot"></div><div class="stat-num" id="checkinsCount">—</div><div class="stat-label">حاضر الآن</div></div>
+  </div>
+  <div class="actions" id="mainActions"></div>
+  <button class="logout-btn" id="bLogout">⬅ تسجيل الخروج</button>
+</div>
+
+<!-- ===== REGISTER EMPLOYEE ===== -->
 <div class="page" id="page-register">
-  <div class="header"><button class="back-btn" id="bBackReg">&#8592;</button><span>تسجيل موظف جديد</span><span style="width:40px"></span></div>
-  <div class="reg-page-body">
+  <div class="header">
+    <button class="back-btn" id="bBackReg">←</button>
+    <span>تسجيل موظف جديد</span>
+    <span style="width:52px"></span>
+  </div>
+  <div class="page-body">
     <div class="form-group"><label>الاسم الكامل</label><input type="text" id="empName" placeholder="أدخل اسم الموظف"></div>
     <div class="form-group"><label>الوظيفة / القسم</label><input type="text" id="empJob" placeholder="مثال: محاسب، مهندس..."></div>
-    <button class="submit-btn" id="bSubmitReg">تسجيل وانشاء QR Code</button>
+    <button class="submit-btn" id="bSubmitReg">تسجيل وإنشاء QR Code</button>
   </div>
 </div>
 
-<!-- PAGE 3 -->
+<!-- ===== TICKET ===== -->
+<div class="page" id="page-ticket">
+  <div class="header">
+    <button class="back-btn" id="bBackTicket">←</button>
+    <span>بطاقة الموظف</span>
+    <span style="width:52px"></span>
+  </div>
+  <div class="ticket-page-body">
+    <div class="ticket-card" id="ticketCard">
+      <div class="ticket-header">
+        <div class="org-name">Employee Pass</div>
+        <div class="emp-name" id="ticketName">—</div>
+        <div class="emp-job" id="ticketJob">—</div>
+      </div>
+      <div class="ticket-body">
+        <div class="ticket-qr-wrap"><div id="ticketQRCanvas"></div></div>
+        <div class="ticket-id-row">
+          <div class="ticket-id-label">Employee ID</div>
+          <div class="ticket-id-value" id="ticketId">—</div>
+        </div>
+      </div>
+      <div class="ticket-sep"></div>
+      <div class="ticket-footer">
+        <div><div class="date-label">تاريخ الإصدار</div><div class="date-value" id="ticketDate">—</div></div>
+        <div class="ticket-valid">✓ VALID</div>
+      </div>
+    </div>
+    <div class="ticket-actions">
+      <button class="ticket-dl-btn" id="bDlTicket">⬇ تنزيل البطاقة PNG</button>
+      <button class="ticket-new-btn" id="bNewEmp">+ تسجيل موظف آخر</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCANNER ===== -->
 <div class="page" id="page-scanner">
-  <div class="header"><button class="back-btn" id="bBackScan">&#8592;</button><span id="scannerTitle">تسجيل دخول</span><span style="width:40px"></span></div>
+  <div class="header">
+    <button class="back-btn" id="bBackScan">←</button>
+    <span id="scannerTitle">تسجيل دخول</span>
+    <span style="width:52px"></span>
+  </div>
   <div class="scanner-top-row">
     <div class="scanner-mode-badge mode-in" id="scannerModeBadge">CHECK-IN</div>
     <div class="scan-counter">تم: <b id="scanCountDisplay">0</b></div>
@@ -129,9 +307,8 @@ body{font-family:'Inter',sans-serif;background:#eef2f7;color:#1a1a2e;min-height:
     <div id="scanFrame"><div id="scanFrameBox"><div id="scanLine"></div></div></div>
     <div id="scanResult"><div id="scanResultIcon"></div><div id="scanResultText"></div></div>
     <div id="camOffOverlay" onclick="startCamera()">
-      <div style="font-size:60px;">📷</div>
-      <div style="color:white;font-size:21px;font-weight:700;">اضغط لفتح الكاميرا</div>
-      <div style="color:rgba(255,255,255,0.6);font-size:13px;">سيطلب إذن مرة واحدة فقط</div>
+      <div class="cam-pulse">📷</div>
+      <div style="color:white;font-size:19px;font-weight:700;">اضغط لفتح الكاميرا</div>
     </div>
   </div>
   <div class="cam-status-bar" id="camStatusBar">جاري تشغيل الكاميرا...</div>
@@ -139,112 +316,302 @@ body{font-family:'Inter',sans-serif;background:#eef2f7;color:#1a1a2e;min-height:
     <div class="divider">أو أدخل الـ ID يدوياً</div>
     <div class="manual-box">
       <input type="text" id="manualId" placeholder="EMP-XXXXXXXXXX" autocomplete="off">
-      <button class="manual-submit" id="bManual">&#10003; تسجيل</button>
+      <button class="manual-submit" id="bManual">✓ تسجيل</button>
     </div>
-    <button class="stop-scan-btn" id="bStopScan">&#9632; إيقاف والرجوع</button>
+    <button class="stop-scan-btn" id="bStopScan">■ إيقاف والرجوع</button>
   </div>
 </div>
 
-<!-- PAGE 4 -->
-<div class="page" id="page-ticket">
-  <div class="header"><button class="back-btn" id="bBackTicket">&#8592;</button><span>بطاقة الموظف</span><span style="width:40px"></span></div>
-  <div class="ticket-page-body">
-    <div class="ticket-card" id="ticketCard">
-      <div class="ticket-header"><div class="org-name">Employee Pass</div><div class="emp-name" id="ticketName">—</div><div class="emp-job" id="ticketJob">—</div></div>
-      <div class="ticket-body"><div class="ticket-qr-wrap"><div id="ticketQRCanvas"></div></div><div class="ticket-id-row"><div class="ticket-id-label">Employee ID</div><div class="ticket-id-value" id="ticketId">—</div></div></div>
-      <div class="ticket-perf"><div class="ticket-perf-line"></div></div>
-      <div class="ticket-footer"><div><div class="date-label">تاريخ الإصدار</div><div class="date-value" id="ticketDate">—</div></div><div class="ticket-valid">✓ VALID</div></div>
+<!-- ===== EMPLOYEES PAGE ===== -->
+<div class="page" id="page-employees">
+  <div class="header">
+    <button class="back-btn" id="bBackEmp">←</button>
+    <span>إدارة الموظفين</span>
+    <span style="width:52px"></span>
+  </div>
+  <div class="page-body" id="employeesList">
+    <div class="empty-state">جاري التحميل...</div>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div class="page" id="page-admin">
+  <div class="header">
+    <button class="back-btn" id="bBackAdmin">←</button>
+    <span>إدارة موظفي الأمن</span>
+    <span style="width:52px"></span>
+  </div>
+  <div class="page-body">
+    <div class="section-title">إضافة موظف أمن جديد</div>
+    <div class="card">
+      <div class="form-group"><label>الاسم</label><input type="text" id="newGuardUsername" placeholder="مثال: حسن"></div>
+      <div class="form-group"><label>كلمة المرور</label><input type="text" id="newGuardPassword" placeholder="مثال: 1234"></div>
+      <button class="submit-btn purple" id="bAddGuard">إضافة موظف الأمن</button>
     </div>
-    <div class="ticket-actions">
-      <button class="ticket-dl-btn" id="bDlTicket">&#11015; تنزيل البطاقة PNG</button>
-      <button class="ticket-new-btn" id="bNewEmp">&#43; تسجيل موظف آخر</button>
+    <div class="section-title">موظفو الأمن الحاليين</div>
+    <div id="guardsList"><div class="empty-state">جاري التحميل...</div></div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT GUARD -->
+<div class="modal-overlay" id="editGuardModal">
+  <div class="modal">
+    <div class="modal-title">تعديل موظف الأمن</div>
+    <div class="modal-form">
+      <div class="form-group"><label>الاسم</label><input type="text" id="editGuardUsername"></div>
+      <div class="form-group"><label>كلمة المرور</label><input type="text" id="editGuardPassword"></div>
+    </div>
+    <div class="section-title" style="margin-bottom:12px;">الموظفون المعينون</div>
+    <div class="emp-check-list" id="guardEmpCheckList"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" id="bEditGuardCancel">إلغاء</button>
+      <button class="modal-save" id="bEditGuardSave">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT EMPLOYEE -->
+<div class="modal-overlay" id="editEmpModal">
+  <div class="modal">
+    <div class="modal-title">تعديل بيانات الموظف</div>
+    <div class="modal-form">
+      <div class="form-group"><label>الاسم الكامل</label><input type="text" id="editEmpName"></div>
+      <div class="form-group"><label>الوظيفة / القسم</label><input type="text" id="editEmpJob"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" id="bEditEmpCancel">إلغاء</button>
+      <button class="modal-save" id="bEditEmpSave">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DELETE CONFIRM -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-title">⚠️ تأكيد الحذف</div>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:20px;" id="deleteModalMsg">هل أنت متأكد؟</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" id="bDeleteCancel">إلغاء</button>
+      <button class="modal-save red" id="bDeleteConfirm">حذف</button>
     </div>
   </div>
 </div>
 
 <script>
-// ============================================================
-// API — يتصل بـ Netlify Function (آمن)
-// ============================================================
+var currentPage='page-login', currentUser=null;
+var scanMode='in', scanCooldown=false, cooldownTimer=null;
+var COOLDOWN_MS=800, sessionCount=0, lastCode='', lastCodeTime=0;
+var camStream=null, camRunning=false, rafId=null;
+var allEmployees=[], editingGuardData=null, editingEmpData=null;
+var deleteCallback=null, selectedEmpIds=[];
+
+// API
 async function callAPI(params) {
-  const res = await fetch('/api', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  });
-  const data = await res.json();
+  const res = await fetch('/api/attendance', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(params)});
+  const text = await res.text();
+  if (!text) throw new Error('استجابة فارغة');
+  let data; try { data=JSON.parse(text); } catch(e) { throw new Error('خطأ في الرد'); }
   if (data.error) throw new Error(data.error);
   return data.result;
 }
 
-// STATE
-var currentPage='page-main',scanMode='in',scanCooldown=false,cooldownTimer=null;
-var COOLDOWN_MS=800,sessionCount=0,lastCode='',lastCodeTime=0;
-var camStream=null,camRunning=false,rafId=null;
-
+// NAV
 function goToPage(id){document.getElementById(currentPage).classList.remove('active');document.getElementById(id).classList.add('active');currentPage=id;}
 function tap(id,fn){var el=document.getElementById(id);if(!el)return;var lock=false;function fire(e){if(e&&e.cancelable)e.preventDefault();if(lock)return;lock=true;setTimeout(function(){lock=false;},400);fn();}el.addEventListener('touchend',fire,{passive:false});el.addEventListener('click',fire);}
-function flash(ok){try{var o=document.getElementById('flashOverlay');o.className='';requestAnimationFrame(function(){requestAnimationFrame(function(){o.className=ok?'fs':'fe';setTimeout(function(){o.className='';},220);});});}catch(e){}}
+function flash(ok){var o=document.getElementById('flashOverlay');o.className='';requestAnimationFrame(function(){requestAnimationFrame(function(){o.className=ok?'fs':'fe';setTimeout(function(){o.className='';},220);});});}
 function beep(ok){try{var c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=ok?'sine':'sawtooth';o.frequency.setValueAtTime(ok?880:220,c.currentTime);g.gain.setValueAtTime(0.3,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.28);o.start();o.stop(c.currentTime+0.28);}catch(e){}}
 
-function updateCounts(){
-  callAPI({action:'currentPresent'}).then(function(n){
-    document.getElementById('checkinsCount').textContent=n;
-    document.getElementById('checkinSub').textContent=n;
-  }).catch(function(){});
+// ===== LOGIN =====
+function doLogin() {
+  var pass = document.getElementById('loginPassword').value.trim();
+  var errEl = document.getElementById('loginErr');
+  if (!pass) { errEl.textContent='أدخل كلمة المرور'; return; }
+  errEl.textContent='';
+  var btn = document.getElementById('bLogin');
+  btn.textContent='جاري التحقق...'; btn.disabled=true;
+  callAPI({action:'login', password:pass})
+  .then(function(result){
+    btn.textContent='دخول'; btn.disabled=false;
+    if (result && result.success) {
+      currentUser=result; beep(true); flash(true);
+      document.getElementById('loginPassword').value='';
+      setupMainPage(); goToPage('page-main');
+    } else {
+      beep(false); flash(false);
+      errEl.textContent='❌ كلمة المرور غلط';
+    }
+  }).catch(function(e){btn.textContent='دخول';btn.disabled=false;errEl.textContent='❌ '+e.message;});
 }
 
+tap('bLogin', doLogin);
+tap('showLoginPass', function(){
+  var inp=document.getElementById('loginPassword');
+  inp.type=inp.type==='password'?'text':'password';
+  document.getElementById('showLoginPass').textContent=inp.type==='password'?'👁':'🙈';
+});
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('loginPassword').addEventListener('keypress',function(e){if(e.key==='Enter')doLogin();});
+});
+
+// ===== MAIN =====
+function setupMainPage(){
+  document.getElementById('headerUserName').textContent=currentUser.name;
+  document.getElementById('mainGreeting').textContent='مرحباً، '+currentUser.name+' 👋';
+  var dot=document.getElementById('headerRoleDot');
+  dot.className='role-dot '+currentUser.role;
+  var actions=document.getElementById('mainActions');
+  if (currentUser.role==='admin') {
+    actions.innerHTML=`
+      <button class="action-btn btn-reg" id="b1"><div class="btn-icon">📋</div><div class="btn-text"><span class="btn-main-text">تسجيل موظف جديد</span><span class="btn-sub-text">إنشاء بطاقة QR Code</span></div><span class="btn-arrow">‹</span></button>
+      <button class="action-btn btn-employees" id="b5"><div class="btn-icon">👥</div><div class="btn-text"><span class="btn-main-text">إدارة الموظفين</span><span class="btn-sub-text">عرض وتعديل وحذف</span></div><span class="btn-arrow">‹</span></button>
+      <button class="action-btn btn-checkin" id="b2"><div class="btn-icon">✅</div><div class="btn-text"><span class="btn-main-text">تسجيل دخول</span><span class="btn-sub-text">مسح QR Code للدخول</span></div><span class="btn-arrow">‹</span></button>
+      <button class="action-btn btn-checkout" id="b3"><div class="btn-icon">🚪</div><div class="btn-text"><span class="btn-main-text">تسجيل خروج</span><span class="btn-sub-text">مسح QR Code للخروج</span></div><span class="btn-arrow">‹</span></button>
+      <button class="action-btn btn-admin" id="b4"><div class="btn-icon">⚙️</div><div class="btn-text"><span class="btn-main-text">إدارة موظفي الأمن</span><span class="btn-sub-text">إضافة وتعديل وحذف</span></div><span class="btn-arrow">‹</span></button>`;
+    tap('b1',function(){goToPage('page-register');});
+    tap('b5',function(){openEmployeesPage();});
+    tap('b2',function(){openScanner('in');});
+    tap('b3',function(){openScanner('out');});
+    tap('b4',function(){openAdminPage();});
+  } else {
+    actions.innerHTML=`
+      <button class="action-btn btn-checkin" id="b2"><div class="btn-icon">✅</div><div class="btn-text"><span class="btn-main-text">تسجيل دخول</span><span class="btn-sub-text">مسح QR Code للدخول</span></div><span class="btn-arrow">‹</span></button>
+      <button class="action-btn btn-checkout" id="b3"><div class="btn-icon">🚪</div><div class="btn-text"><span class="btn-main-text">تسجيل خروج</span><span class="btn-sub-text">مسح QR Code للخروج</span></div><span class="btn-arrow">‹</span></button>`;
+    tap('b2',function(){openScanner('in');});
+    tap('b3',function(){openScanner('out');});
+  }
+  updateCounts();
+}
+
+function updateCounts(){callAPI({action:'currentPresent'}).then(function(n){document.getElementById('checkinsCount').textContent=n;document.getElementById('attendeesCount').textContent=n;}).catch(function(){});}
+
+// ===== REGISTER EMPLOYEE =====
 function registerEmployee(){
-  var name=document.getElementById('empName').value.trim();
-  var job=document.getElementById('empJob').value.trim();
+  var name=document.getElementById('empName').value.trim(), job=document.getElementById('empJob').value.trim();
   if(!name||!job){alert('أدخل الاسم والوظيفة');return;}
-  var btn=document.getElementById('bSubmitReg');
-  btn.textContent='جاري الحفظ...';btn.disabled=true;
-  callAPI({action:'registerEmployee',name:name,job:job})
-    .then(function(id){btn.textContent='تسجيل وانشاء QR Code';btn.disabled=false;showTicket(name,job,id);})
-    .catch(function(e){btn.textContent='تسجيل وانشاء QR Code';btn.disabled=false;alert('خطأ: '+e.message);});
+  var btn=document.getElementById('bSubmitReg');btn.textContent='جاري الحفظ...';btn.disabled=true;
+  callAPI({action:'registerEmployee',name:name,job:job}).then(function(id){btn.textContent='تسجيل وإنشاء QR Code';btn.disabled=false;showTicket(name,job,id);}).catch(function(e){btn.textContent='تسجيل وإنشاء QR Code';btn.disabled=false;alert('خطأ: '+e.message);});
 }
 
 function showTicket(name,job,empId){
-  document.getElementById('ticketName').textContent=name;
-  document.getElementById('ticketJob').textContent=job;
-  document.getElementById('ticketId').textContent=empId;
+  document.getElementById('ticketName').textContent=name;document.getElementById('ticketJob').textContent=job;document.getElementById('ticketId').textContent=empId;
   var d=new Date();document.getElementById('ticketDate').textContent=d.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
   var w=document.getElementById('ticketQRCanvas');w.innerHTML='';
-  new QRCode(w,{text:empId,width:190,height:190,colorDark:'#1e293b',colorLight:'#f8fafc',correctLevel:QRCode.CorrectLevel.H});
+  new QRCode(w,{text:empId,width:180,height:180,colorDark:'#1e293b',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
   beep(true);goToPage('page-ticket');
 }
+
 function downloadTicket(){
-  if(typeof html2canvas==='undefined'){alert('انتظر ثانية');return;}
-  html2canvas(document.getElementById('ticketCard'),{scale:3,useCORS:true,backgroundColor:'#fff'}).then(function(c){var a=document.createElement('a');a.download=document.getElementById('ticketId').textContent+' - '+document.getElementById('ticketName').textContent+'.png';a.href=c.toDataURL('image/png');a.click();});
+  if(typeof html2canvas==='undefined'){alert('انتظر');return;}
+  html2canvas(document.getElementById('ticketCard'),{scale:3,useCORS:true,backgroundColor:'#111827'}).then(function(c){var a=document.createElement('a');a.download=document.getElementById('ticketId').textContent+' - '+document.getElementById('ticketName').textContent+'.png';a.href=c.toDataURL('image/png');a.click();});
 }
 
+// ===== EMPLOYEES PAGE =====
+function openEmployeesPage(){goToPage('page-employees');loadEmployees();}
+function loadEmployees(){
+  var list=document.getElementById('employeesList');list.innerHTML='<div class="empty-state">جاري التحميل...</div>';
+  callAPI({action:'getEmployees'}).then(function(employees){
+    allEmployees=employees||[];
+    if(allEmployees.length===0){list.innerHTML='<div class="empty-state">لا يوجد موظفون بعد</div>';return;}
+    list.innerHTML='';
+    allEmployees.forEach(function(emp){
+      var card=document.createElement('div');card.className='card';
+      card.innerHTML=`<div class="card-top"><div><div class="card-name">👤 ${emp.name}</div><div class="card-sub">${emp.job} · <span style="font-family:var(--mono);font-size:11px;">${emp.id}</span></div></div><div class="card-actions"><button class="card-edit-btn">تعديل</button><button class="card-del-btn">حذف</button></div></div>`;
+      card.querySelector('.card-edit-btn').onclick=function(){openEditEmp(emp);};
+      card.querySelector('.card-del-btn').onclick=function(){openDeleteConfirm('حذف الموظف "'+emp.name+'"؟',function(){deleteEmployeeRow(emp.rowNum);});};
+      list.appendChild(card);
+    });
+    var addBtn=document.createElement('button');addBtn.className='submit-btn';addBtn.textContent='+ إضافة موظف جديد';addBtn.onclick=function(){goToPage('page-register');};list.appendChild(addBtn);
+  }).catch(function(e){list.innerHTML='<div class="empty-state">خطأ: '+e.message+'</div>';});
+}
+
+function openEditEmp(emp){editingEmpData=emp;document.getElementById('editEmpName').value=emp.name;document.getElementById('editEmpJob').value=emp.job;document.getElementById('editEmpModal').classList.add('active');}
+function saveEditEmp(){
+  if(!editingEmpData)return;
+  var name=document.getElementById('editEmpName').value.trim(),job=document.getElementById('editEmpJob').value.trim();
+  if(!name||!job){alert('أدخل الاسم والوظيفة');return;}
+  var btn=document.getElementById('bEditEmpSave');btn.textContent='جاري الحفظ...';btn.disabled=true;
+  callAPI({action:'editEmployee',rowNum:editingEmpData.rowNum,name:name,job:job}).then(function(){btn.textContent='حفظ';btn.disabled=false;document.getElementById('editEmpModal').classList.remove('active');loadEmployees();}).catch(function(e){btn.textContent='حفظ';btn.disabled=false;alert('خطأ: '+e.message);});
+}
+function deleteEmployeeRow(rowNum){callAPI({action:'deleteEmployee',rowNum:rowNum}).then(function(){loadEmployees();}).catch(function(e){alert('خطأ: '+e.message);});}
+
+// ===== ADMIN PAGE =====
+function openAdminPage(){
+  goToPage('page-admin');loadGuards();
+  callAPI({action:'getEmployees'}).then(function(e){allEmployees=e||[];}).catch(function(){});
+}
+function loadGuards(){
+  var list=document.getElementById('guardsList');list.innerHTML='<div class="empty-state">جاري التحميل...</div>';
+  callAPI({action:'getGuards'}).then(function(guards){
+    if(!guards||guards.length===0){list.innerHTML='<div class="empty-state">لا يوجد موظفو أمن بعد</div>';return;}
+    list.innerHTML='';
+    guards.forEach(function(g){
+      var assignedNames=g.assigned.length===0?[]:g.assigned.map(function(id){var emp=allEmployees.find(function(e){return e.id===id;});return emp?emp.name:id;});
+      var card=document.createElement('div');card.className='card';
+      card.innerHTML=`<div class="card-top"><div><div class="card-name">🛡️ ${g.username}</div><div class="card-sub">باسوورد: <span style="font-family:var(--mono)">${g.password}</span></div></div><div class="card-actions"><button class="card-edit-btn">تعديل</button><button class="card-del-btn">حذف</button></div></div><div class="chip-row">${assignedNames.length>0?assignedNames.map(function(n){return '<div class="chip green">'+n+'</div>';}).join(''):'<div class="chip empty">لم يُعيَّن موظفون</div>'}</div>`;
+      card.querySelector('.card-edit-btn').onclick=function(){openEditGuard(g);};
+      card.querySelector('.card-del-btn').onclick=function(){openDeleteConfirm('حذف موظف الأمن "'+g.username+'"؟',function(){deleteGuardRow(g.rowNum);});};
+      list.appendChild(card);
+    });
+  }).catch(function(e){list.innerHTML='<div class="empty-state">خطأ: '+e.message+'</div>';});
+}
+
+function addGuard(){
+  var username=document.getElementById('newGuardUsername').value.trim(),password=document.getElementById('newGuardPassword').value.trim();
+  if(!username||!password){alert('أدخل الاسم وكلمة المرور');return;}
+  var btn=document.getElementById('bAddGuard');btn.textContent='جاري الإضافة...';btn.disabled=true;
+  callAPI({action:'addGuard',username:username,password:password,assignedEmployees:[]}).then(function(result){
+    btn.textContent='إضافة موظف الأمن';btn.disabled=false;
+    if(result&&!result.success){alert(result.error||'خطأ');return;}
+    document.getElementById('newGuardUsername').value='';document.getElementById('newGuardPassword').value='';
+    loadGuards();
+  }).catch(function(e){btn.textContent='إضافة موظف الأمن';btn.disabled=false;alert('خطأ: '+e.message);});
+}
+
+function openEditGuard(g){
+  editingGuardData=g;selectedEmpIds=g.assigned.slice();
+  document.getElementById('editGuardUsername').value=g.username;document.getElementById('editGuardPassword').value=g.password;
+  var list=document.getElementById('guardEmpCheckList');list.innerHTML='';
+  if(allEmployees.length===0){list.innerHTML='<div class="empty-state">لا يوجد موظفون</div>';}
+  allEmployees.forEach(function(emp){
+    var sel=selectedEmpIds.includes(emp.id);
+    var item=document.createElement('div');item.className='emp-check-item'+(sel?' selected':'');
+    item.innerHTML=`<div class="emp-check-box">${sel?'✓':''}</div><div><div class="emp-check-name">${emp.name}</div><div class="emp-check-id">${emp.id}</div></div>`;
+    item.onclick=function(){var idx=selectedEmpIds.indexOf(emp.id);if(idx===-1){selectedEmpIds.push(emp.id);item.classList.add('selected');item.querySelector('.emp-check-box').textContent='✓';}else{selectedEmpIds.splice(idx,1);item.classList.remove('selected');item.querySelector('.emp-check-box').textContent='';}};
+    list.appendChild(item);
+  });
+  document.getElementById('editGuardModal').classList.add('active');
+}
+
+function saveEditGuard(){
+  if(!editingGuardData)return;
+  var username=document.getElementById('editGuardUsername').value.trim(),password=document.getElementById('editGuardPassword').value.trim();
+  if(!username||!password){alert('أدخل الاسم وكلمة المرور');return;}
+  var btn=document.getElementById('bEditGuardSave');btn.textContent='جاري الحفظ...';btn.disabled=true;
+  callAPI({action:'editGuard',rowNum:editingGuardData.rowNum,username:username,password:password,assignedEmployees:selectedEmpIds}).then(function(){btn.textContent='حفظ';btn.disabled=false;document.getElementById('editGuardModal').classList.remove('active');loadGuards();}).catch(function(e){btn.textContent='حفظ';btn.disabled=false;alert('خطأ: '+e.message);});
+}
+function deleteGuardRow(rowNum){callAPI({action:'deleteGuard',rowNum:rowNum}).then(function(){loadGuards();}).catch(function(e){alert('خطأ: '+e.message);});}
+
+function openDeleteConfirm(msg,callback){document.getElementById('deleteModalMsg').textContent=msg;deleteCallback=callback;document.getElementById('deleteModal').classList.add('active');}
+
+// ===== SCANNER =====
 function openScanner(mode){
   scanMode=mode;sessionCount=0;lastCode='';lastCodeTime=0;
   document.getElementById('scanCountDisplay').textContent='0';
   var badge=document.getElementById('scannerModeBadge'),title=document.getElementById('scannerTitle');
   if(mode==='in'){badge.textContent='CHECK-IN';badge.className='scanner-mode-badge mode-in';title.textContent='تسجيل دخول';}
   else{badge.textContent='CHECK-OUT';badge.className='scanner-mode-badge mode-out';title.textContent='تسجيل خروج';}
-  document.getElementById('manualId').value='';
-  hideResult();setCamStatus('جاري تشغيل الكاميرا...','');
-  goToPage('page-scanner');
-  setTimeout(startCamera,250);
+  document.getElementById('manualId').value='';hideResult();setCamStatus('جاري تشغيل الكاميرا...','');
+  goToPage('page-scanner');setTimeout(startCamera,250);
 }
 
 function startCamera(){
   if(camRunning)return;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){document.getElementById('camOffOverlay').classList.remove('hidden');setCamStatus('⚠️ الكاميرا غير مدعومة','error');return;}
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})
-  .then(function(stream){
-    camStream=stream;camRunning=true;
-    var v=document.getElementById('camVideo');v.srcObject=stream;
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false}).then(function(stream){
+    camStream=stream;camRunning=true;var v=document.getElementById('camVideo');v.srcObject=stream;
     document.getElementById('camOffOverlay').classList.add('hidden');
     v.addEventListener('loadedmetadata',function(){v.play();rafId=requestAnimationFrame(readFrame);setCamStatus('📷 وجّه الكاميرا على QR Code','');},{once:true});
-  }).catch(function(err){
-    console.warn('Camera:',err.name);
-    document.getElementById('camOffOverlay').classList.remove('hidden');
-    setCamStatus('اضغط المربع لفتح الكاميرا','');
-  });
+  }).catch(function(){document.getElementById('camOffOverlay').classList.remove('hidden');setCamStatus('اضغط لفتح الكاميرا','');});
 }
 
 function readFrame(){
@@ -252,44 +619,25 @@ function readFrame(){
   var v=document.getElementById('camVideo'),c=document.getElementById('camCanvas');
   if(v.readyState===v.HAVE_ENOUGH_DATA&&!scanCooldown){
     var vw=v.videoWidth,vh=v.videoHeight;
-    if(vw>0&&vh>0){
-      c.width=vw;c.height=vh;
-      var ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(v,0,0,vw,vh);
-      var m=0.17,x=Math.floor(vw*m),y=Math.floor(vh*m),w=Math.floor(vw*(1-m*2)),h=Math.floor(vh*(1-m*2));
-      var px=ctx.getImageData(x,y,w,h);
-      if(typeof jsQR!=='undefined'){var code=jsQR(px.data,px.width,px.height,{inversionAttempts:'dontInvert'});if(code&&code.data)onScan(code.data);}
-    }
+    if(vw>0&&vh>0){c.width=vw;c.height=vh;var ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(v,0,0,vw,vh);var m=0.17,x=Math.floor(vw*m),y=Math.floor(vh*m),w=Math.floor(vw*(1-m*2)),h=Math.floor(vh*(1-m*2));var px=ctx.getImageData(x,y,w,h);if(typeof jsQR!=='undefined'){var code=jsQR(px.data,px.width,px.height,{inversionAttempts:'dontInvert'});if(code&&code.data)onScan(code.data);}}
   }
   rafId=requestAnimationFrame(readFrame);
 }
 
-function stopCamera(){
-  camRunning=false;if(rafId){cancelAnimationFrame(rafId);rafId=null;}
-  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
-  document.getElementById('camVideo').srcObject=null;
-  document.getElementById('camOffOverlay').classList.remove('hidden');
-}
-
+function stopCamera(){camRunning=false;if(rafId){cancelAnimationFrame(rafId);rafId=null;}if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}document.getElementById('camVideo').srcObject=null;document.getElementById('camOffOverlay').classList.remove('hidden');}
 function showResult(ok,icon,msg){var el=document.getElementById('scanResult');document.getElementById('scanResultIcon').textContent=icon;document.getElementById('scanResultText').textContent=msg;el.className=ok?'ok':'err';}
 function hideResult(){document.getElementById('scanResult').className='';}
 
 function onScan(code){
   try{
-    if(!code)return;
-    var now=Date.now();
+    if(!code)return;var now=Date.now();
     if(code===lastCode&&(now-lastCodeTime)<2000)return;
     if(scanCooldown)return;
     scanCooldown=true;lastCode=code;lastCodeTime=now;
-    flash(true);beep(true);
-    showResult(true,'⏳','جاري التسجيل...');
-    setCamStatus('⏳ '+code.substring(0,20)+'...','');
+    flash(true);beep(true);showResult(true,'⏳','جاري التسجيل...');setCamStatus('⏳ '+code.substring(0,20)+'...','');
     if(cooldownTimer)clearTimeout(cooldownTimer);
-    callAPI({action:'registerAttendance',qrCode:code,mode:scanMode})
-      .then(handleResult)
-      .catch(function(err){
-        showResult(false,'❌',err.message);setCamStatus('خطأ: '+err.message,'error');flash(false);beep(false);
-        cooldownTimer=setTimeout(function(){scanCooldown=false;hideResult();setCamStatus('📷 وجّه الكاميرا على QR Code','');},1200);
-      });
+    var assignedIds=(currentUser&&currentUser.role==='guard')?currentUser.assigned:[];
+    callAPI({action:'registerAttendance',qrCode:code,mode:scanMode,scannedBy:currentUser?currentUser.name:'غير معروف',assignedIds:assignedIds}).then(handleResult).catch(function(err){showResult(false,'❌',err.message);setCamStatus('خطأ: '+err.message,'error');flash(false);beep(false);cooldownTimer=setTimeout(function(){scanCooldown=false;hideResult();setCamStatus('📷 وجّه الكاميرا على QR Code','');},1200);});
   }catch(e){scanCooldown=false;hideResult();}
 }
 
@@ -305,13 +653,22 @@ function setCamStatus(msg,type){var el=document.getElementById('camStatusBar');e
 function manualSubmit(){var id=document.getElementById('manualId').value.trim();if(!id){alert('أدخل الـ ID');return;}if(scanCooldown)return;onScan(id);document.getElementById('manualId').value='';}
 function stopScanner(){if(cooldownTimer){clearTimeout(cooldownTimer);cooldownTimer=null;}scanCooldown=false;stopCamera();hideResult();goToPage('page-main');}
 
-tap('b1',function(){goToPage('page-register');});tap('b2',function(){openScanner('in');});tap('b3',function(){openScanner('out');});
-tap('bBackReg',function(){goToPage('page-main');});tap('bBackScan',stopScanner);tap('bStopScan',stopScanner);
+// LOGOUT
+function logout(){currentUser=null;document.getElementById('loginErr').textContent='';document.getElementById('loginPassword').value='';goToPage('page-login');}
+
+// EVENTS
+tap('bLogout',logout);
+tap('bBackReg',function(){goToPage('page-main');});tap('bSubmitReg',registerEmployee);
 tap('bBackTicket',function(){goToPage('page-main');});tap('bDlTicket',downloadTicket);
 tap('bNewEmp',function(){document.getElementById('empName').value='';document.getElementById('empJob').value='';document.getElementById('ticketQRCanvas').innerHTML='';goToPage('page-register');});
-tap('bSubmitReg',registerEmployee);tap('bManual',manualSubmit);
+tap('bBackScan',stopScanner);tap('bStopScan',stopScanner);tap('bManual',manualSubmit);
+tap('bBackAdmin',function(){goToPage('page-main');});tap('bAddGuard',addGuard);
+tap('bEditGuardCancel',function(){document.getElementById('editGuardModal').classList.remove('active');});tap('bEditGuardSave',saveEditGuard);
+tap('bBackEmp',function(){goToPage('page-main');});
+tap('bEditEmpCancel',function(){document.getElementById('editEmpModal').classList.remove('active');});tap('bEditEmpSave',saveEditEmp);
+tap('bDeleteCancel',function(){document.getElementById('deleteModal').classList.remove('active');deleteCallback=null;});
+tap('bDeleteConfirm',function(){document.getElementById('deleteModal').classList.remove('active');if(deleteCallback){deleteCallback();deleteCallback=null;}});
 document.getElementById('manualId').addEventListener('keypress',function(e){if(e.key==='Enter')manualSubmit();});
-updateCounts();
 </script>
 </body>
 </html>
