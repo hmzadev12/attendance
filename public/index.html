@@ -405,9 +405,9 @@ var camStream=null, camRunning=false, rafId=null;
 var allEmployees=[], editingGuardData=null, editingEmpData=null;
 var deleteCallback=null, selectedEmpIds=[];
 
-// API
+// API — الرابط الصحيح
 async function callAPI(params) {
-  const res = await fetch('/api/attendance', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(params)});
+  const res = await fetch('/.netlify/functions/api', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(params)});
   const text = await res.text();
   if (!text) throw new Error('استجابة فارغة');
   let data; try { data=JSON.parse(text); } catch(e) { throw new Error('خطأ في الرد'); }
