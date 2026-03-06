@@ -19,13 +19,19 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const TIMEZONE       = 'Asia/Riyadh'; // GMT+3
 
 // ============================================================
+// هيكل شيت Attendance (7 أعمدة A:G)
+// A: date | B: emp_id | C: emp_name | D: time_in | E: time_out | F: hours | G: entry_num
+// ============================================================
+
+// ============================================================
 // Helper — تاريخ ووقت بتوقيت السعودية
 // ============================================================
 function nowInRiyadh() {
   const now = new Date();
-  const opts = { timeZone: TIMEZONE, hour12: false };
-  const date = now.toLocaleDateString('en-CA', { ...opts }); // yyyy-MM-dd
-  const time = now.toLocaleTimeString('en-GB', { ...opts }); // HH:mm:ss
+  const dateOpts = { timeZone: TIMEZONE, hour12: false };
+  const timeOpts = { timeZone: TIMEZONE, hour12: true };
+  const date = now.toLocaleDateString('en-CA', { ...dateOpts }); // yyyy-MM-dd
+  const time = now.toLocaleTimeString('en-US', { ...timeOpts }); // hh:mm:ss AM/PM
   return { date, time, now };
 }
 
@@ -34,7 +40,6 @@ function nowInRiyadh() {
 // ============================================================
 async function registerEmployee(sheets, name, job) {
   const id = 'EMP-' + Math.random().toString(36).substr(2, 10).toUpperCase();
-  const { date } = nowInRiyadh();
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
@@ -48,6 +53,15 @@ async function registerEmployee(sheets, name, job) {
 
 // ============================================================
 // registerAttendance
+//
+// المنطق:
+//   دخول:
+//     - إذا آخر سجل اليوم بدون time_out → مسجل داخل (يمنع)
+//     - غير ذلك (لا سجل، أو آخر سجل فيه خروج) → يضيف سجل جديد
+//
+//   خروج:
+//     - يبحث عن آخر سجل اليوم بدون time_out → يسجل الخروج فيه
+//     - إذا ما في سجل مفتوح → يمنع
 // ============================================================
 async function registerAttendance(sheets, qrCode, mode) {
   // جلب الموظفين
@@ -68,46 +82,69 @@ async function registerAttendance(sheets, qrCode, mode) {
 
   const { date, time } = nowInRiyadh();
 
-  // جلب سجلات الحضور
+  // جلب سجلات الحضور كاملة
   const attRes = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: 'Attendance!A:F',
+    range: 'Attendance!A:G',
   });
   const attRows = attRes.data.values || [];
 
-  let rowIndex = -1;
+  // نبحث عن آخر سجل لهذا الموظف اليوم
+  let lastRowIndex = -1;   // 1-based sheet row
+  let lastRowData  = null;
+  let entryCount   = 0;
+
   for (let j = 1; j < attRows.length; j++) {
     if (attRows[j][0] === date && attRows[j][1] === employee.id) {
-      rowIndex = j + 1; // 1-based
-      break;
+      lastRowIndex = j + 1;
+      lastRowData  = attRows[j];
+      entryCount++;
     }
   }
 
+  // -------------------------------------------------------
+  // تسجيل الدخول
+  // -------------------------------------------------------
   if (mode === 'in') {
-    if (rowIndex !== -1) return '⚠ مسجل دخول قبل';
+    // إذا آخر سجل مفتوح (بدون خروج) → ممنوع
+    if (lastRowData && !lastRowData[4]) {
+      return '⚠ مسجل دخول حالياً — سجل خروج أولاً';
+    }
+
+    // إضافة سجل جديد
+    const newEntryNum = entryCount + 1;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Attendance!A:F',
+      range: 'Attendance!A:G',
       valueInputOption: 'USER_ENTERED',
-      resource: { values: [[date, employee.id, employee.name, time, '', '']] },
+      resource: {
+        values: [[date, employee.id, employee.name, time, '', '', newEntryNum]],
+      },
     });
-    return '✔ تم تسجيل الدخول: ' + employee.name;
+
+    const suffix = newEntryNum > 1 ? ` (دخولة رقم ${newEntryNum})` : '';
+    return `✔ تم تسجيل الدخول: ${employee.name}${suffix}`;
   }
 
+  // -------------------------------------------------------
+  // تسجيل الخروج
+  // -------------------------------------------------------
   if (mode === 'out') {
-    if (rowIndex === -1) return '⚠ ماكو تسجيل دخول';
+    // لازم في سجل مفتوح بدون خروج
+    if (lastRowIndex === -1 || (lastRowData && lastRowData[4])) {
+      return '⚠ ما في تسجيل دخول مفتوح';
+    }
 
-    const startTime = attRows[rowIndex - 1][3];
+    const startTime = lastRowData[3];
     if (!startTime) return '⚠ خطأ في البيانات';
 
     const start = new Date(date + 'T' + startTime);
     const end   = new Date(date + 'T' + time);
     const hours = ((end - start) / (1000 * 60 * 60)).toFixed(2);
 
-    // تحديث عمود الخروج والساعات
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: `Attendance!E${rowIndex}:F${rowIndex}`,
+      range: `Attendance!E${lastRowIndex}:F${lastRowIndex}`,
       valueInputOption: 'USER_ENTERED',
       resource: { values: [[time, hours]] },
     });
@@ -119,19 +156,27 @@ async function registerAttendance(sheets, qrCode, mode) {
 }
 
 // ============================================================
-// currentPresent
+// currentPresent — من آخر سجل لهم اليوم بدون خروج
 // ============================================================
 async function currentPresent(sheets) {
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: 'Attendance!A:F',
+    range: 'Attendance!A:G',
   });
   const rows  = res.data.values || [];
   const today = nowInRiyadh().date;
-  let count   = 0;
 
+  // آخر سجل لكل موظف اليوم
+  const lastRecord = {};
   for (let i = 1; i < rows.length; i++) {
-    if (rows[i][0] === today && !rows[i][4]) count++;
+    if (rows[i][0] === today) {
+      lastRecord[rows[i][1]] = rows[i];
+    }
+  }
+
+  let count = 0;
+  for (const empId in lastRecord) {
+    if (!lastRecord[empId][4]) count++;
   }
   return count;
 }
@@ -146,7 +191,6 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
-  // CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
