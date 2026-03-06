@@ -1,0 +1,8 @@
+{
+  "name": "attendance-system",
+  "version": "1.0.0",
+  "description": "Attendance System with Google Sheets",
+  "dependencies": {
+    "googleapis": "^140.0.0"
+  }
+}
