@@ -3,228 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EXPRO - لوحة التحكم</title>
+    <title>EXPRO - نظام الحضور</title>
     <style>
+        /* --- 1. الألوان النهارية الصافية --- */
         :root {
-            /* نظام الألوان الفاتح */
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --accent: #0284c7;
-            --text-main: #0f172a;
-            --text-sub: #64748b;
-            --border: #e2e8f0;
-            --card-dark: #1e293b;
+            --bg: #ffffff;           /* خلفية بيضاء بالكامل */
+            --surface: #f8fafc;     /* رمادي فاتح جداً للبطاقات */
+            --accent: #0284c7;      /* أزرق احترافي */
+            --text-main: #0f172a;   /* أسود للقراءة */
+            --text-sub: #64748b;    /* رمادي للنصوص الجانبية */
+            --border: #e2e8f0;      /* حدود خفيفة */
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
 
         body {
-            margin: 0; font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg); color: var(--text-main);
-            line-height: 1.6; touch-action: pan-y;
+            margin: 0; background-color: var(--bg); color: var(--text-main);
+            line-height: 1.6; direction: rtl;
         }
 
-        /* --- واجهة تسجيل الدخول --- */
+        /* --- 2. واجهة تسجيل الدخول (بدون صورة وبدون مرحبا) --- */
         .login-wrap {
             height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, #e0f2fe 0%, #f1f5f9 100%);
+            background: #f1f5f9;
         }
 
         .login-card {
-            background: var(--surface); width: 90%; max-width: 380px;
-            padding: 50px 30px; border-radius: 28px;
+            background: white; width: 90%; max-width: 380px;
+            padding: 50px 30px; border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             border: 1px solid var(--border); text-align: center;
         }
 
-        .brand-name { font-size: 48px; margin-bottom: 5px; letter-spacing: -2px; }
+        .brand-name { font-size: 45px; margin-bottom: 30px; }
         .brand-ex { color: var(--accent); font-weight: 800; }
         .brand-pro { color: #334155; font-weight: 300; }
 
         .input-group { text-align: right; margin-bottom: 20px; position: relative; }
         .input-group label { display: block; margin-bottom: 8px; color: var(--text-sub); font-size: 14px; }
-        
         .input-group input {
-            width: 100%; padding: 14px; background: #f1f5f9; border: 1px solid var(--border);
-            border-radius: 12px; color: var(--text-main); outline: none; font-size: 16px;
-        }
-
-        .toggle-password {
-            position: absolute; left: 12px; top: 38px; background: none;
-            border: none; color: var(--text-sub); cursor: pointer; font-size: 18px;
+            width: 100%; padding: 14px; background: #fff; border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text-main); font-size: 16px; outline: none;
         }
 
         .btn-login {
             width: 100%; padding: 15px; background: var(--accent); border: none;
-            border-radius: 12px; color: #fff; font-weight: 700; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+            border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer;
         }
 
-        /* --- لوحة التحكم (الرئيسية) --- */
+        /* --- 3. لوحة التحكم والجدول (حل مشكلة التداخل) --- */
         .page { display: none; padding: 20px; }
-        .page.active { display: block; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
 
-        .dashboard-header { margin-bottom: 25px; }
-
-        /* بطاقة الرقم (عرض الحاضرين) */
+        /* بطاقة الرقم الكبيرة */
         .stats-card {
-            background: var(--card-dark);
-            padding: 35px 20px; border-radius: 24px;
-            text-align: center; position: relative;
-            cursor: pointer; transition: 0.2s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            background: #1e293b; color: white; padding: 30px;
+            border-radius: 20px; text-align: center; margin-bottom: 20px;
+            cursor: pointer;
         }
-        .stats-card:active { transform: scale(0.97); }
+        .stats-number { font-size: 60px; font-weight: 800; }
 
-        .stats-number { font-size: 72px; font-weight: 800; color: #fff; line-height: 1; }
-        .stats-label { color: #94a3b8; font-size: 16px; margin-top: 10px; }
-        .stats-hint { color: var(--accent); font-size: 12px; margin-top: 5px; font-weight: 600; }
-        
-        .online-dot {
-            position: absolute; top: 20px; right: 20px;
-            width: 12px; height: 12px; background: #10b981;
-            border-radius: 50%; box-shadow: 0 0 10px #10b981;
+        /* الجدول المصلح */
+        .report-section {
+            background: white; border: 1px solid var(--border);
+            border-radius: 15px; overflow: hidden; margin-top: 20px;
         }
 
-        /* بطاقات الأفعال (دخول/خروج) */
-        .action-item {
-            background: var(--surface); border: 1px solid var(--border);
-            padding: 20px; border-radius: 20px;
-            display: flex; align-items: center; margin-bottom: 15px;
-            cursor: pointer; transition: 0.2s;
-        }
-        .action-item:active { background: #f8fafc; }
-
-        .action-icon {
-            width: 50px; height: 50px; border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; margin-left: 15px;
-        }
-        .action-icon.in { background: #f0fdf4; color: #16a34a; }
-        .action-icon.out { background: #fff7ed; color: #ea580c; }
-
-        .action-title { font-weight: 700; color: var(--text-main); font-size: 16px; }
-        .action-sub { font-size: 12px; color: var(--text-sub); }
-
-        .btn-logout-alt {
-            width: 100%; padding: 15px; background: transparent;
-            border: 1px solid #fee2e2; color: #ef4444;
-            border-radius: 15px; font-weight: 700; cursor: pointer;
-            margin-top: 20px;
+        .table-scroll {
+            width: 100%; overflow-x: auto; /* هذا يمنع التداخل في الموبايل */
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: #f8fafc; padding: 12px; border-bottom: 2px solid var(--border); font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: center; white-space: nowrap; }
+
+        .btn-logout {
+            width: 100%; background: none; border: 1px solid #fee2e2;
+            color: #ef4444; padding: 12px; border-radius: 10px; margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-<div id="page-login" class="page active" style="padding:0;">
+<div id="page-login" class="page active">
     <div class="login-wrap">
         <div class="login-card">
-            <h1 class="brand-name"><span class="brand-ex">EX</span><span class="brand-pro">PRO</span></h1>
-            <p style="color: var(--text-sub); margin-bottom: 35px;">أدخل بياناتك للوصول للنظام</p>
-            
+            <div class="brand-name"><span class="brand-ex">EX</span><span class="brand-pro">PRO</span></div>
             <div class="input-group">
                 <label>اسم المستخدم</label>
-                <input type="text" id="loginUser" placeholder="Username">
+                <input type="text" id="user" placeholder="Username">
             </div>
-            
             <div class="input-group">
                 <label>كلمة المرور</label>
-                <input type="password" id="loginPass" placeholder="••••••••">
-                <button type="button" class="toggle-password" onclick="togglePass()">👁️</button>
+                <input type="password" id="pass" placeholder="••••••••">
             </div>
-            
-            <button class="btn-login" onclick="handleLogin()">دخول للنظام</button>
+            <button class="btn-login" onclick="login()">دخول</button>
         </div>
     </div>
 </div>
 
 <div id="page-main" class="page">
-    <div class="dashboard-header">
-        <p style="color: var(--text-sub); margin-bottom: 5px;">مرحباً بك 👋</p>
-        <h2 style="margin: 0;">لوحة التحكم</h2>
-    </div>
-
-    <div class="stats-card action-trigger" onclick="goToPage('page-present-list')">
+    <h2>لوحة التحكم</h2>
+    
+    <div class="stats-card" onclick="alert('فتح القائمة')">
         <div class="stats-number">1</div>
-        <div class="stats-label">داخل الموقع الآن</div>
-        <div class="stats-hint">اضغط لعرض القائمة ↑</div>
-        <span class="online-dot"></span>
+        <p>داخل الموقع الآن</p>
     </div>
 
-    <div class="action-item action-trigger" onclick="goToPage('page-scanner-in')">
-        <div class="action-icon in">✅</div>
-        <div class="action-info">
-            <div class="action-title">تسجيل دخول</div>
-            <div class="action-sub">مسح QR Code للموظف</div>
+    <div class="report-section">
+        <div style="padding:15px; border-bottom:1px solid #eee;">📊 تقرير الحضور</div>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>التاريخ</th>
+                        <th>الدخول</th>
+                        <th>الخروج</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><b>مالك علي</b></td>
+                        <td>2026-04-06</td>
+                        <td>22:22:35</td>
+                        <td>--</td>
+                        <td style="color:green">دخول ●</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><b>مالك علي</b></td>
+                        <td>2026-04-06</td>
+                        <td>22:20:53</td>
+                        <td>22:20:58</td>
+                        <td>خروج ✓</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="action-item action-trigger" onclick="goToPage('page-scanner-out')">
-        <div class="action-icon out">🚪</div>
-        <div class="action-info">
-            <div class="action-title">تسجيل خروج</div>
-            <div class="action-sub">إنهاء فترة الدوام</div>
-        </div>
-    </div>
-
-    <button class="btn-logout-alt action-trigger" onclick="handleLogout()">
-        تسجيل الخروج من النظام ⬅
-    </button>
-</div>
-
-<div id="page-present-list" class="page">
-    <button onclick="goToPage('page-main')" style="margin-bottom:20px; border:none; background:none; color:var(--accent); font-weight:700;">← عودة للرئيسية</button>
-    <h3>قائمة الحاضرين الآن</h3>
-    <div style="background:#fff; border:1px solid var(--border); border-radius:15px; padding:15px;">
-        <p>1. مالك علي - (دخول: 10:03 م)</p>
-    </div>
+    <button class="btn-logout" onclick="location.reload()">تسجيل خروج</button>
 </div>
 
 <script>
-    let touchMoved = false;
-    let startY = 0;
-
-    // مراقبة بداية اللمس
-    document.addEventListener('touchstart', (e) => {
-        touchMoved = false;
-        startY = e.touches[0].pageY;
-    }, {passive: true});
-
-    // إذا تحرك الإصبع (سحب) نلغي تفعيل النقر
-    document.addEventListener('touchmove', (e) => {
-        if (Math.abs(e.touches[0].pageY - startY) > 10) {
-            touchMoved = true;
-        }
-    }, {passive: true});
-
-    function goToPage(id) {
-        if (touchMoved) return; // منع الفتح التلقائي عند السحب
-        
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        const target = document.getElementById(id);
-        if(target) target.classList.add('active');
-        
-        if (navigator.vibrate) navigator.vibrate(40);
-        window.scrollTo(0,0);
-    }
-
-    function togglePass() {
-        const p = document.getElementById('loginPass');
-        p.type = (p.type === "password") ? "text" : "password";
-    }
-
-    function handleLogin() {
-        if (touchMoved) return;
-        goToPage('page-main');
-    }
-
-    function handleLogout() {
-        if (touchMoved) return;
-        if(confirm("هل تريد تسجيل الخروج؟")) {
-            location.reload();
-        }
+    function login() {
+        document.getElementById('page-login').classList.remove('active');
+        document.getElementById('page-main').classList.add('active');
     }
 </script>
 
