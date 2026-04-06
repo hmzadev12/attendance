@@ -3,75 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EXPRO System</title>
+    <title>EXPRO - لوحة التحكم</title>
     <style>
         :root {
-            --bg: #0f172a;
-            --surface: #1e293b;
-            --accent: #06b6d4;
-            --text: #f8fafc;
-            --text3: #94a3b8;
-            --border: rgba(255,255,255,0.1);
+            /* نظام الألوان الفاتح */
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --accent: #0284c7;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --card-dark: #1e293b;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: var(--bg); color: var(--text);
-            overflow-x: hidden; touch-action: pan-y;
+            margin: 0; font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg); color: var(--text-main);
+            line-height: 1.6; touch-action: pan-y;
         }
 
-        /* تنسيق واجهة تسجيل الدخول المحدثة */
+        /* --- واجهة تسجيل الدخول --- */
         .login-wrap {
             height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+            background: linear-gradient(135deg, #e0f2fe 0%, #f1f5f9 100%);
         }
 
         .login-card {
-            background: var(--surface); width: 90%; max-width: 360px;
-            padding: 40px 25px; border-radius: 24px;
+            background: var(--surface); width: 90%; max-width: 380px;
+            padding: 50px 30px; border-radius: 28px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             border: 1px solid var(--border); text-align: center;
         }
 
-        .brand-name { font-size: 40px; margin-bottom: 5px; letter-spacing: -1px; }
+        .brand-name { font-size: 48px; margin-bottom: 5px; letter-spacing: -2px; }
         .brand-ex { color: var(--accent); font-weight: 800; }
-        .brand-pro { color: #fff; font-weight: 300; }
-        
+        .brand-pro { color: #334155; font-weight: 300; }
+
         .input-group { text-align: right; margin-bottom: 20px; position: relative; }
-        .input-group label { display: block; margin-bottom: 8px; color: var(--text3); font-size: 14px; }
+        .input-group label { display: block; margin-bottom: 8px; color: var(--text-sub); font-size: 14px; }
         
         .input-group input {
-            width: 100%; padding: 12px; background: #0f172a; border: 1px solid var(--border);
-            border-radius: 12px; color: #fff; box-sizing: border-box; outline: none;
+            width: 100%; padding: 14px; background: #f1f5f9; border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text-main); outline: none; font-size: 16px;
         }
 
         .toggle-password {
-            position: absolute; left: 10px; top: 35px; background: none;
-            border: none; color: var(--text3); cursor: pointer; font-size: 18px;
+            position: absolute; left: 12px; top: 38px; background: none;
+            border: none; color: var(--text-sub); cursor: pointer; font-size: 18px;
         }
 
         .btn-login {
-            width: 100%; padding: 14px; background: var(--accent); border: none;
+            width: 100%; padding: 15px; background: var(--accent); border: none;
             border-radius: 12px; color: #fff; font-weight: 700; cursor: pointer;
-            transition: 0.3s; margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
         }
 
-        /* منع التفاعل الوهمي للأزرار عند السحب */
-        .menu-card, .btn-action, .btn-login {
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
+        /* --- لوحة التحكم (الرئيسية) --- */
+        .page { display: none; padding: 20px; }
+        .page.active { display: block; animation: fadeIn 0.3s ease; }
+
+        .dashboard-header { margin-bottom: 25px; }
+
+        /* بطاقة الرقم (عرض الحاضرين) */
+        .stats-card {
+            background: var(--card-dark);
+            padding: 35px 20px; border-radius: 24px;
+            text-align: center; position: relative;
+            cursor: pointer; transition: 0.2s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .stats-card:active { transform: scale(0.97); }
+
+        .stats-number { font-size: 72px; font-weight: 800; color: #fff; line-height: 1; }
+        .stats-label { color: #94a3b8; font-size: 16px; margin-top: 10px; }
+        .stats-hint { color: var(--accent); font-size: 12px; margin-top: 5px; font-weight: 600; }
+        
+        .online-dot {
+            position: absolute; top: 20px; right: 20px;
+            width: 12px; height: 12px; background: #10b981;
+            border-radius: 50%; box-shadow: 0 0 10px #10b981;
         }
 
-        .page { display: none; }
-        .page.active { display: block; }
+        /* بطاقات الأفعال (دخول/خروج) */
+        .action-item {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 20px; border-radius: 20px;
+            display: flex; align-items: center; margin-bottom: 15px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .action-item:active { background: #f8fafc; }
+
+        .action-icon {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin-left: 15px;
+        }
+        .action-icon.in { background: #f0fdf4; color: #16a34a; }
+        .action-icon.out { background: #fff7ed; color: #ea580c; }
+
+        .action-title { font-weight: 700; color: var(--text-main); font-size: 16px; }
+        .action-sub { font-size: 12px; color: var(--text-sub); }
+
+        .btn-logout-alt {
+            width: 100%; padding: 15px; background: transparent;
+            border: 1px solid #fee2e2; color: #ef4444;
+            border-radius: 15px; font-weight: 700; cursor: pointer;
+            margin-top: 20px;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="page-login" class="page active">
+<div id="page-login" class="page active" style="padding:0;">
     <div class="login-wrap">
         <div class="login-card">
             <h1 class="brand-name"><span class="brand-ex">EX</span><span class="brand-pro">PRO</span></h1>
-            <p style="color: var(--text3); font-size: 13px; margin-bottom: 30px;">نظام إدارة الحضور الذكي</p>
+            <p style="color: var(--text-sub); margin-bottom: 35px;">أدخل بياناتك للوصول للنظام</p>
             
             <div class="input-group">
                 <label>اسم المستخدم</label>
@@ -90,55 +141,90 @@
 </div>
 
 <div id="page-main" class="page">
-    <div style="padding: 20px;">
-        <h2>الرئيسية</h2>
-        <div class="menu-card action-trigger" data-target="page-scanner" style="padding:20px; background:var(--surface); border-radius:15px; margin-bottom:10px;">
-            فتح الماسح الضوئي (اضغط للدخول)
+    <div class="dashboard-header">
+        <p style="color: var(--text-sub); margin-bottom: 5px;">مرحباً بك 👋</p>
+        <h2 style="margin: 0;">لوحة التحكم</h2>
+    </div>
+
+    <div class="stats-card action-trigger" onclick="goToPage('page-present-list')">
+        <div class="stats-number">1</div>
+        <div class="stats-label">داخل الموقع الآن</div>
+        <div class="stats-hint">اضغط لعرض القائمة ↑</div>
+        <span class="online-dot"></span>
+    </div>
+
+    <div class="action-item action-trigger" onclick="goToPage('page-scanner-in')">
+        <div class="action-icon in">✅</div>
+        <div class="action-info">
+            <div class="action-title">تسجيل دخول</div>
+            <div class="action-sub">مسح QR Code للموظف</div>
         </div>
+    </div>
+
+    <div class="action-item action-trigger" onclick="goToPage('page-scanner-out')">
+        <div class="action-icon out">🚪</div>
+        <div class="action-info">
+            <div class="action-title">تسجيل خروج</div>
+            <div class="action-sub">إنهاء فترة الدوام</div>
+        </div>
+    </div>
+
+    <button class="btn-logout-alt action-trigger" onclick="handleLogout()">
+        تسجيل الخروج من النظام ⬅
+    </button>
+</div>
+
+<div id="page-present-list" class="page">
+    <button onclick="goToPage('page-main')" style="margin-bottom:20px; border:none; background:none; color:var(--accent); font-weight:700;">← عودة للرئيسية</button>
+    <h3>قائمة الحاضرين الآن</h3>
+    <div style="background:#fff; border:1px solid var(--border); border-radius:15px; padding:15px;">
+        <p>1. مالك علي - (دخول: 10:03 م)</p>
     </div>
 </div>
 
 <script>
-    // 1. وظيفة إخفاء وإظهار كلمة المرور
-    function togglePass() {
-        const p = document.getElementById('loginPass');
-        p.type = (p.type === "password") ? "text" : "password";
-    }
-
-    // 2. حل مشكلة السحب (Scroll vs Click)
     let touchMoved = false;
     let startY = 0;
 
+    // مراقبة بداية اللمس
     document.addEventListener('touchstart', (e) => {
         touchMoved = false;
         startY = e.touches[0].pageY;
     }, {passive: true});
 
+    // إذا تحرك الإصبع (سحب) نلغي تفعيل النقر
     document.addEventListener('touchmove', (e) => {
         if (Math.abs(e.touches[0].pageY - startY) > 10) {
-            touchMoved = true; // المستخدم يقوم بالتمرير (Scroll)
+            touchMoved = true;
         }
     }, {passive: true});
 
-    // مراقب عام لكل الأزرار التي تفتح صفحات
-    document.addEventListener('touchend', (e) => {
-        const targetEl = e.target.closest('.action-trigger');
-        if (targetEl && !touchMoved) {
-            // تنفيذ الضغط فقط إذا لم تتحرك الصفحة
-            const pageId = targetEl.getAttribute('data-target');
-            goToPage(pageId);
-        }
-    });
-
     function goToPage(id) {
+        if (touchMoved) return; // منع الفتح التلقائي عند السحب
+        
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if (navigator.vibrate) navigator.vibrate(30);
+        const target = document.getElementById(id);
+        if(target) target.classList.add('active');
+        
+        if (navigator.vibrate) navigator.vibrate(40);
+        window.scrollTo(0,0);
     }
 
-    async function handleLogin() {
-        // منطق تسجيل الدخول الخاص بك هنا
-        goToPage('page-main'); 
+    function togglePass() {
+        const p = document.getElementById('loginPass');
+        p.type = (p.type === "password") ? "text" : "password";
+    }
+
+    function handleLogin() {
+        if (touchMoved) return;
+        goToPage('page-main');
+    }
+
+    function handleLogout() {
+        if (touchMoved) return;
+        if(confirm("هل تريد تسجيل الخروج؟")) {
+            location.reload();
+        }
     }
 </script>
 
