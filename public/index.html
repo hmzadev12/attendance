@@ -3,156 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EXPRO - نظام الحضور</title>
+    <title>EXPRO WHITE MODE</title>
     <style>
-        /* --- 1. الألوان النهارية الصافية --- */
-        :root {
-            --bg: #ffffff;           /* خلفية بيضاء بالكامل */
-            --surface: #f8fafc;     /* رمادي فاتح جداً للبطاقات */
-            --accent: #0284c7;      /* أزرق احترافي */
-            --text-main: #0f172a;   /* أسود للقراءة */
-            --text-sub: #64748b;    /* رمادي للنصوص الجانبية */
-            --border: #e2e8f0;      /* حدود خفيفة */
+        /* إجبار الخلفية على اللون الأبيض */
+        html, body { 
+            background-color: #ffffff !important; 
+            color: #1a1a1a !important; 
+            margin: 0; 
+            font-family: sans-serif; 
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
-
-        body {
-            margin: 0; background-color: var(--bg); color: var(--text-main);
-            line-height: 1.6; direction: rtl;
+        /* تنسيق واجهة الدخول البيضاء */
+        .login-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f4f8; /* رمادي فاتح جداً للخلفية */
         }
 
-        /* --- 2. واجهة تسجيل الدخول (بدون صورة وبدون مرحبا) --- */
-        .login-wrap {
-            height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: #f1f5f9;
+        .white-card {
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 360px;
+            text-align: center;
+            border: 1px solid #e1e8ed;
         }
 
-        .login-card {
-            background: white; width: 90%; max-width: 380px;
-            padding: 50px 30px; border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            border: 1px solid var(--border); text-align: center;
+        .ex-logo { font-size: 40px; font-weight: 800; margin-bottom: 20px; }
+        .ex-blue { color: #007bff; }
+        .ex-dark { color: #333; }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #fff !important;
+            color: #000 !important;
         }
 
-        .brand-name { font-size: 45px; margin-bottom: 30px; }
-        .brand-ex { color: var(--accent); font-weight: 800; }
-        .brand-pro { color: #334155; font-weight: 300; }
-
-        .input-group { text-align: right; margin-bottom: 20px; position: relative; }
-        .input-group label { display: block; margin-bottom: 8px; color: var(--text-sub); font-size: 14px; }
-        .input-group input {
-            width: 100%; padding: 14px; background: #fff; border: 1px solid var(--border);
-            border-radius: 10px; color: var(--text-main); font-size: 16px; outline: none;
+        .btn-blue {
+            width: 100%;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
         }
 
-        .btn-login {
-            width: 100%; padding: 15px; background: var(--accent); border: none;
-            border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer;
-        }
+        /* تنسيق لوحة التحكم النهارية */
+        .dashboard { display: none; padding: 20px; background: #fff; min-height: 100vh; }
+        .dashboard.active { display: block; }
 
-        /* --- 3. لوحة التحكم والجدول (حل مشكلة التداخل) --- */
-        .page { display: none; padding: 20px; }
-        .page.active { display: block; }
-
-        /* بطاقة الرقم الكبيرة */
-        .stats-card {
-            background: #1e293b; color: white; padding: 30px;
-            border-radius: 20px; text-align: center; margin-bottom: 20px;
+        .top-stat {
+            background: #2d3436; /* خليتها كحلي غامق جداً لتبرز الأرقام */
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 20px;
             cursor: pointer;
         }
-        .stats-number { font-size: 60px; font-weight: 800; }
 
-        /* الجدول المصلح */
-        .report-section {
-            background: white; border: 1px solid var(--border);
-            border-radius: 15px; overflow: hidden; margin-top: 20px;
-        }
-
-        .table-scroll {
-            width: 100%; overflow-x: auto; /* هذا يمنع التداخل في الموبايل */
-        }
-
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { background: #f8fafc; padding: 12px; border-bottom: 2px solid var(--border); font-size: 13px; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: center; white-space: nowrap; }
-
-        .btn-logout {
-            width: 100%; background: none; border: 1px solid #fee2e2;
-            color: #ef4444; padding: 12px; border-radius: 10px; margin-top: 20px;
+        .action-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
-<div id="page-login" class="page active">
-    <div class="login-wrap">
-        <div class="login-card">
-            <div class="brand-name"><span class="brand-ex">EX</span><span class="brand-pro">PRO</span></div>
-            <div class="input-group">
-                <label>اسم المستخدم</label>
-                <input type="text" id="user" placeholder="Username">
-            </div>
-            <div class="input-group">
-                <label>كلمة المرور</label>
-                <input type="password" id="pass" placeholder="••••••••">
-            </div>
-            <button class="btn-login" onclick="login()">دخول</button>
-        </div>
+<div id="loginPage" class="login-screen">
+    <div class="white-card">
+        <div class="ex-logo"><span class="ex-blue">EX</span><span class="ex-dark">PRO</span></div>
+        <input type="text" id="u" placeholder="اسم المستخدم">
+        <input type="password" id="p" placeholder="كلمة المرور">
+        <button class="btn-blue" onclick="start()">دخول للنظام</button>
     </div>
 </div>
 
-<div id="page-main" class="page">
-    <h2>لوحة التحكم</h2>
+<div id="mainPage" class="dashboard">
+    <h2 style="color:#333">لوحة التحكم</h2>
     
-    <div class="stats-card" onclick="alert('فتح القائمة')">
-        <div class="stats-number">1</div>
-        <p>داخل الموقع الآن</p>
+    <div class="top-stat" onclick="showList()">
+        <div style="font-size: 50px; font-weight: bold;">1</div>
+        <div>داخل الموقع الآن</div>
+        <small style="color:#aaa">(اضغط لعرض الأسماء)</small>
     </div>
 
-    <div class="report-section">
-        <div style="padding:15px; border-bottom:1px solid #eee;">📊 تقرير الحضور</div>
-        <div class="table-scroll">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>الاسم</th>
-                        <th>التاريخ</th>
-                        <th>الدخول</th>
-                        <th>الخروج</th>
-                        <th>الحالة</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td><b>مالك علي</b></td>
-                        <td>2026-04-06</td>
-                        <td>22:22:35</td>
-                        <td>--</td>
-                        <td style="color:green">دخول ●</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td><b>مالك علي</b></td>
-                        <td>2026-04-06</td>
-                        <td>22:20:53</td>
-                        <td>22:20:58</td>
-                        <td>خروج ✓</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="action-box">
+        <div style="font-size:30px; margin-left:15px;">✅</div>
+        <div><b>تسجيل دخول</b><br><small>مسح QR Code</small></div>
     </div>
 
-    <button class="btn-logout" onclick="location.reload()">تسجيل خروج</button>
+    <div class="action-box">
+        <div style="font-size:30px; margin-left:15px;">🚪</div>
+        <div><b>تسجيل خروج</b><br><small>إنهاء العمل</small></div>
+    </div>
+
+    <button onclick="location.reload()" style="width:100%; margin-top:20px; background:none; border:1px dotted red; color:red; padding:10px; border-radius:10px;">تسجيل خروج</button>
 </div>
 
 <script>
-    function login() {
-        document.getElementById('page-login').classList.remove('active');
-        document.getElementById('page-main').classList.add('active');
+    function start() {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('mainPage').classList.add('active');
+    }
+    function showList() {
+        alert("القائمة: \n1- مالك علي (10:03 م)");
     }
 </script>
 
