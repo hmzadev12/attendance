@@ -1,1 +1,195 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EXPRO - نظام الإدارة الكامل</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #f8fafc;
+            --accent: #0284c7;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+        }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
+
+        body {
+            margin: 0; background-color: var(--bg); color: var(--text-main);
+            line-height: 1.6; overflow-x: hidden;
+        }
+
+        /* --- شاشة الدخول --- */
+        .login-page {
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: #f1f5f9;
+        }
+        .login-card {
+            background: white; width: 90%; max-width: 380px; padding: 40px;
+            border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center;
+        }
+        .brand { font-size: 40px; font-weight: 800; margin-bottom: 30px; }
+        .brand span { color: var(--accent); }
+
+        input {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border);
+            border-radius: 10px; font-size: 16px; outline: none;
+        }
+
+        .btn-primary {
+            width: 100%; padding: 15px; background: var(--accent); color: white;
+            border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
+        }
+
+        /* --- لوحة التحكم --- */
+        .page { display: none; padding: 20px; }
+        .page.active { display: block; }
+
+        /* بطاقة الرقم العلوي */
+        .stats-banner {
+            background: #1e293b; color: white; padding: 30px; border-radius: 20px;
+            text-align: center; margin-bottom: 25px; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .stats-number { font-size: 60px; font-weight: 800; display: block; }
+
+        /* القائمة والجداول */
+        .section-title { margin: 20px 0 10px; font-size: 18px; font-weight: bold; }
+        
+        .list-container { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; overflow: hidden; }
+        
+        .item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; border-bottom: 1px solid var(--border);
+        }
+        .item-row:last-child { border-bottom: none; }
+
+        .controls { display: flex; gap: 8px; }
+        .btn-sm { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .btn-edit { background: #e0f2fe; color: var(--accent); }
+        .btn-delete { background: #fee2e2; color: var(--danger); }
+
+        /* نافذة التعديل المنبثقة */
+        .modal-overlay {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 340px; }
+
+        /* منع مشاكل السحب */
+        .scroll-area { overflow-x: auto; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div id="login" class="page active">
+    <div class="login-page">
+        <div class="login-card">
+            <div class="brand">EX<span>PRO</span></div>
+            <input type="text" placeholder="اسم المستخدم">
+            <input type="password" placeholder="كلمة المرور">
+            <button class="btn-primary" onclick="showPage('dashboard')">دخول للنظام</button>
+        </div>
+    </div>
+</div>
+
+<div id="dashboard" class="page">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>لوحة التحكم</h2>
+        <button onclick="location.reload()" style="background:none; border:none; color:red;">خروج</button>
+    </div>
+
+    <div class="stats-banner" onclick="showPage('present-list')">
+        <span class="stats-number">1</span>
+        <span>داخل الموقع الآن</span>
+        <div style="font-size:12px; color:#94a3b8; margin-top:5px;">اضغط لعرض الأسماء ↑</div>
+    </div>
+
+    <div class="section-title">إدارة الموظفين</div>
+    <div class="list-container">
+        <div class="item-row" id="row-22">
+            <div>
+                <strong>موظف: 22</strong><br>
+                <small style="color:var(--text-sub)">كلمة المرور: 22</small>
+            </div>
+            <div class="controls">
+                <button class="btn-sm btn-edit" onclick="openEdit('22')">تعديل</button>
+                <button class="btn-sm btn-delete" onclick="deleteRow('row-22')">حذف</button>
+            </div>
+        </div>
+        <div class="item-row" id="row-11">
+            <div>
+                <strong>موظف: 11</strong><br>
+                <small style="color:var(--text-sub)">كلمة المرور: 11</small>
+            </div>
+            <div class="controls">
+                <button class="btn-sm btn-edit" onclick="openEdit('11')">تعديل</button>
+                <button class="btn-sm btn-delete" onclick="deleteRow('row-11')">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="present-list" class="page">
+    <button onclick="showPage('dashboard')" style="background:none; border:none; color:var(--accent); margin-bottom:10px;">← عودة</button>
+    <h3>المتواجدون حالياً</h3>
+    <div class="list-container">
+        <div class="item-row">
+            <div><strong>مالك علي</strong></div>
+            <div style="color:green; font-size:12px;">متصل الآن ●</div>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">تعديل البيانات</h3>
+        <label style="font-size:12px;">الاسم الجديد:</label>
+        <input type="text" id="editInput" style="margin-top:5px;">
+        <div style="display:flex; gap:10px;">
+            <button class="btn-primary" style="padding:10px;" onclick="saveEdit()">حفظ</button>
+            <button class="btn-sm" style="background:#eee;" onclick="closeEdit()">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeId = null;
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0,0);
+    }
+
+    // تفعيل التعديل
+    function openEdit(id) {
+        activeId = id;
+        document.getElementById('editInput').value = "موظف: " + id;
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEdit() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    function saveEdit() {
+        const val = document.getElementById('editInput').value;
+        if(val) {
+            alert("تم حفظ التعديلات للموظف " + activeId);
+            closeEdit();
+        }
+    }
+
+    function deleteRow(rowId) {
+        if(confirm("هل أنت متأكد من الحذف؟")) {
+            document.getElementById(rowId).style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
