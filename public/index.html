@@ -227,12 +227,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 #flashOverlay{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.08s;}
 #flashOverlay.fs{background:rgba(16,185,129,0.14);opacity:1;}
 #flashOverlay.fe{background:rgba(239,68,68,0.14);opacity:1;}
-/* PRESENT LIST */
-.present-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface2);border-radius:12px;margin-bottom:8px;border:1px solid rgba(16,185,129,0.2);}
-.present-avatar{width:38px;height:38px;border-radius:50%;background:rgba(16,185,129,0.15);border:1.5px solid rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--green);flex-shrink:0;}
-.present-name{font-size:14px;font-weight:600;}
-.present-time{font-size:11px;color:var(--text3);margin-top:2px;}
-.present-live{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;}
 /* AUDIT LOG */
 .audit-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 15px;display:flex;flex-direction:column;gap:5px;}
 .audit-item:hover{border-color:rgba(59,130,246,0.25);}
@@ -441,17 +435,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="page-body" id="statsBody"></div>
 </div>
 
-<!-- MODAL: PRESENT LIST -->
-<div class="modal-overlay" id="presentListModal">
-  <div class="modal" style="max-height:80vh;display:flex;flex-direction:column;">
-    <div class="modal-title" id="presentListTitle">الحاضرون الآن</div>
-    <div id="presentListBody" style="overflow-y:auto;flex:1;margin-bottom:14px;min-height:80px;"></div>
-    <div class="modal-actions">
-      <button class="modal-save" id="bClosePresentList" data-t="close">إغلاق</button>
-    </div>
-  </div>
-</div>
-
 <!-- AUDIT LOG PAGE -->
 <div class="page" id="page-audit">
   <div class="header">
@@ -599,7 +582,6 @@ var T = {
     orgName:'بطاقة موظف', empIdLabel:'رقم الموظف',
     validBadge:'✓ نشط', deleteConfirmGuard:'حذف موظف الأمن', deleteConfirmEmp:'حذف الموظف',
     scanDone:'تم:', filterEmployee:'الموظف',
-    presentList:'الحاضرون الآن', presentListSub:'الموظفون داخل الموقع', noPresent:'لا يوجد أحد داخل الموقع الآن', checkinTime:'دخل الساعة', viewPresent:'عرض الحاضرين', subViewPresent:'من هو داخل الموقع الآن', permViewPresent:'عرض الحاضرين',
     // audit log
     auditLog:'سجل التعديلات', auditActor:'بواسطة', auditAction:'العملية', auditDetails:'التفاصيل', auditDateTime:'التاريخ والوقت', noAudit:'لا توجد سجلات بعد',
     // monthly report
@@ -652,7 +634,6 @@ var T = {
     orgName:'Employee Pass', empIdLabel:'Employee ID',
     validBadge:'✓ Active', deleteConfirmGuard:'Delete security guard', deleteConfirmEmp:'Delete employee',
     scanDone:'Done:', filterEmployee:'Employee',
-    presentList:'Currently Present', presentListSub:'Employees inside the site', noPresent:'Nobody is inside right now', checkinTime:'Checked in at', viewPresent:'View Present', subViewPresent:'Who is inside right now', permViewPresent:'View Present List',
     // audit log
     auditLog:'Audit Log', auditActor:'By', auditAction:'Action', auditDetails:'Details', auditDateTime:'Date & Time', noAudit:'No records yet',
     // monthly report
@@ -681,30 +662,6 @@ function applyLang(){
   });
   // re-render dynamic pages based on current page
   refreshCurrentPage();
-}
-
-// ===================== PRESENT LIST =====================
-function openPresentList(){
-  document.getElementById('presentListModal').classList.add('active');
-  var titleEl=document.getElementById('presentListTitle');
-  titleEl.textContent=t('presentList');
-  var body=document.getElementById('presentListBody');
-  body.innerHTML='<div class="empty-state">'+t('loading')+'</div>';
-  callAPI({action:'getPresentList',actor:currentUser.name}).then(function(list){
-    if(!list||list.length===0){
-      body.innerHTML='<div class="empty-state" style="padding:24px 0;font-size:32px;">🏢<br><br><span style="font-size:14px;">'+t('noPresent')+'</span></div>';
-      return;
-    }
-    titleEl.textContent=t('presentList')+' ('+list.length+')';
-    var html='';
-    list.forEach(function(emp){
-      var initials=(emp.name||'?').trim().split(' ').filter(Boolean).map(function(w){return w[0];}).slice(0,2).join('');
-      html+='<div class="present-item"><div class="present-avatar">'+initials+'</div><div style="flex:1;"><div class="present-name">'+emp.name+'</div><div class="present-time">'+t('checkinTime')+' '+emp.timeIn+'</div></div><div class="present-live"></div></div>';
-    });
-    body.innerHTML=html;
-  }).catch(function(){
-    body.innerHTML='<div class="empty-state" style="color:var(--red);">خطأ في التحميل</div>';
-  });
 }
 
 // ===================== AUDIT LOG =====================
@@ -872,8 +829,8 @@ var DEMO_EMPLOYEES=[
   {rowNum:6,name:'فهد عبدالرحمن المطيري',job:'مصمم جرافيك',id:'EMP-U1V2W3X4Y5'},
 ];
 var DEMO_GUARDS=[
-  {rowNum:3,username:'حسن أمين',password:'guard1',assigned:[],permissions:{canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:true,canManageGuards:false,canViewPresent:true}},
-  {rowNum:4,username:'خالد نور',password:'guard2',assigned:[],permissions:{canCheckin:true,canCheckout:true,canRegisterEmp:true,canManageEmps:true,canStats:false,canManageGuards:false,canViewPresent:false}},
+  {rowNum:3,username:'حسن أمين',password:'guard1',assigned:[],permissions:{canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:true,canManageGuards:false}},
+  {rowNum:4,username:'خالد نور',password:'guard2',assigned:[],permissions:{canCheckin:true,canCheckout:true,canRegisterEmp:true,canManageEmps:true,canStats:false,canManageGuards:false}},
 ];
 var DEMO_ATTENDANCE=[
   {date:DEMO_TODAY,empId:'EMP-A1B2C3D4E5',empName:'أحمد محمد العلي',timeIn:'08:12:00 AM',timeOut:'04:30:00 PM',hours:'8.30',entryNum:'1',scannedBy:'حسن أمين'},
@@ -898,7 +855,6 @@ async function callAPI(params){
     case 'getEmployees': return JSON.parse(JSON.stringify(DEMO_EMPLOYEES));
     case 'getGuards': return JSON.parse(JSON.stringify(DEMO_GUARDS));
     case 'currentPresent': return DEMO_ATTENDANCE.filter(function(r){return r.timeIn&&!r.timeOut;}).length;
-    case 'getPresentList': return DEMO_ATTENDANCE.filter(function(r){return r.timeIn&&!r.timeOut;}).map(function(r){return {id:r.empId,name:r.empName,timeIn:r.timeIn,scannedBy:r.scannedBy};});
     case 'getAttendanceStats':
       var rows=DEMO_ATTENDANCE.slice();
       if(params.empId) rows=rows.filter(function(r){return r.empId===params.empId;});
@@ -906,9 +862,14 @@ async function callAPI(params){
       return {rows:rows,present:rows.filter(function(r){return r.timeIn&&!r.timeOut;}).length,checkedOut:rows.filter(function(r){return r.timeOut;}).length,total:rows.length,totalHours:h.toFixed(2),dateFrom:params.dateFrom||DEMO_TODAY,dateTo:params.dateTo||DEMO_TODAY};
     case 'getAuditLog': return JSON.parse(JSON.stringify(DEMO_AUDIT));
     case 'getMonthlyReport':
-      var yr=params.year,mo=params.month,dim=new Date(yr,mo,0).getDate(),wd=0;
+      var yr=params.year,mo=params.month;
+      var dim=new Date(yr,mo,0).getDate(),wd=0;
       for(var d=1;d<=dim;d++){var dy=new Date(yr,mo-1,d).getDay();if(dy!==5&&dy!==6)wd++;}
-      var rep=DEMO_EMPLOYEES.map(function(e,i){var dp=Math.max(1,Math.floor(wd*(0.7+i*0.06)));return {id:e.id,name:e.name,job:e.job,daysPresent:dp,daysAbsent:wd-dp,workingDays:wd,totalHours:(dp*7.5).toFixed(2),entries:dp,attendanceRate:Math.round(dp/wd*100)};});
+      var rep=DEMO_EMPLOYEES.map(function(e,i){
+        var dp=Math.max(1,Math.floor(wd*(0.7+i*0.06)));
+        var th=(dp*7.5).toFixed(2);
+        return {id:e.id,name:e.name,job:e.job,daysPresent:dp,daysAbsent:wd-dp,workingDays:wd,totalHours:th,entries:dp,attendanceRate:Math.round(dp/wd*100)};
+      });
       return {report:rep,workingDays:wd,year:yr,month:mo};
     case 'registerEmployee':
       var nid='EMP-'+Math.random().toString(36).substr(2,10).toUpperCase();
@@ -917,20 +878,24 @@ async function callAPI(params){
       return nid;
     case 'editEmployee':
       var ep=DEMO_EMPLOYEES.find(function(e){return e.rowNum===params.rowNum;});
-      if(ep){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'تعديل موظف',details:'"'+ep.name+'" -> "'+params.name+'"'});ep.name=params.name;ep.job=params.job;} return {success:true};
+      if(ep){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'تعديل موظف',details:'"'+ep.name+'" -> "'+params.name+'"'});ep.name=params.name;ep.job=params.job;}
+      return {success:true};
     case 'deleteEmployee':
       var ei=DEMO_EMPLOYEES.findIndex(function(e){return e.rowNum===params.rowNum;});
-      if(ei>-1){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'حذف موظف',details:'"'+DEMO_EMPLOYEES[ei].name+'"'});DEMO_EMPLOYEES.splice(ei,1);} return {success:true};
+      if(ei>-1){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'حذف موظف',details:'"'+DEMO_EMPLOYEES[ei].name+'"'});DEMO_EMPLOYEES.splice(ei,1);}
+      return {success:true};
     case 'addGuard':
       DEMO_GUARDS.push({rowNum:DEMO_GUARDS.length+3,username:params.username,password:params.password,assigned:[],permissions:params.permissions||{}});
       DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'إضافة موظف أمن',details:'"'+params.username+'"'});
       return {success:true};
     case 'editGuard':
       var gp=DEMO_GUARDS.find(function(x){return x.rowNum===params.rowNum;});
-      if(gp){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'تعديل موظف أمن',details:'"'+params.username+'"'});gp.username=params.username;gp.password=params.password;gp.permissions=params.permissions||gp.permissions;} return {success:true};
+      if(gp){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'تعديل موظف أمن',details:'"'+params.username+'"'});gp.username=params.username;gp.password=params.password;gp.permissions=params.permissions||gp.permissions;}
+      return {success:true};
     case 'deleteGuard':
       var gi=DEMO_GUARDS.findIndex(function(x){return x.rowNum===params.rowNum;});
-      if(gi>-1){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'حذف موظف أمن',details:'"'+DEMO_GUARDS[gi].username+'"'});DEMO_GUARDS.splice(gi,1);} return {success:true};
+      if(gi>-1){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'حذف موظف أمن',details:'"'+DEMO_GUARDS[gi].username+'"'});DEMO_GUARDS.splice(gi,1);}
+      return {success:true};
     case 'registerAttendance': return '✔ تم تسجيل الدخول: أحمد محمد العلي (وضع العرض)';
     default: return null;
   }
@@ -974,31 +939,25 @@ function setupMainPage(){
   var actions=document.getElementById('mainActions');
 
   if(currentUser.role==='admin'){
-    statsRow.innerHTML='<div class="stat-card green full" style="cursor:pointer;" onclick="openPresentList()"><div class="stat-dot"></div><div class="stat-num" id="checkinsCount">—</div><div class="stat-label">'+t('presentNow')+'</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">'+t('presentListSub')+' ↓</div></div>';
+    statsRow.innerHTML='<div class="stat-card green full"><div class="stat-dot"></div><div class="stat-num" id="checkinsCount">—</div><div class="stat-label" data-t="presentNow">'+t('presentNow')+'</div></div>';
     actions.innerHTML=
       '<button class="action-btn btn-reg" id="b1"><div class="btn-icon">📋</div><div class="btn-text"><span class="btn-main-text">'+t('registerEmp')+'</span><span class="btn-sub-text">'+t('subCreateQR')+'</span></div><span class="btn-arrow">‹</span></button>'+
       '<button class="action-btn btn-employees" id="b5"><div class="btn-icon">👥</div><div class="btn-text"><span class="btn-main-text">'+t('manageEmps')+'</span><span class="btn-sub-text">'+t('subViewEdit')+'</span></div><span class="btn-arrow">‹</span></button>'+
       '<button class="action-btn btn-stats" id="b6"><div class="btn-icon">📊</div><div class="btn-text"><span class="btn-main-text">'+t('attendanceStats')+'</span><span class="btn-sub-text">'+t('subFullLog')+'</span></div><span class="btn-arrow">‹</span></button>'+
       '<button class="action-btn btn-admin" id="b4"><div class="btn-icon">⚙️</div><div class="btn-text"><span class="btn-main-text">'+t('manageGuards')+'</span><span class="btn-sub-text">'+t('subAddEdit')+'</span></div><span class="btn-arrow">‹</span></button>'+
       '<button class="action-btn" style="border-color:rgba(6,182,212,0.2);" id="b7"><div class="btn-icon" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);">📅</div><div class="btn-text"><span class="btn-main-text">'+t('monthlyReport')+'</span><span class="btn-sub-text">'+t('subMonthly')+'</span></div><span class="btn-arrow">‹</span></button>'+
-      '<button class="action-btn" style="border-color:rgba(139,92,246,0.2);" id="b8"><div class="btn-icon" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">📋</div><div class="btn-text"><span class="btn-main-text">'+t('auditLog')+'</span><span class="btn-sub-text">'+t('subAuditLog')+'</span></div><span class="btn-arrow">‹</span></button>'+
-      '<button class="action-btn" style="border-color:rgba(16,185,129,0.2);" id="b9"><div class="btn-icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);">🟢</div><div class="btn-text"><span class="btn-main-text">'+t('viewPresent')+'</span><span class="btn-sub-text">'+t('subViewPresent')+'</span></div><span class="btn-arrow">‹</span></button>';
+      '<button class="action-btn" style="border-color:rgba(139,92,246,0.2);" id="b8"><div class="btn-icon" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">📋</div><div class="btn-text"><span class="btn-main-text">'+t('auditLog')+'</span><span class="btn-sub-text">'+t('subAuditLog')+'</span></div><span class="btn-arrow">‹</span></button>';
     tap('b1',function(){goToPage('page-register');});
     tap('b5',function(){openEmployeesPage();});
     tap('b6',function(){openStatsPage();});
     tap('b4',function(){openAdminPage();});
     tap('b7',function(){openMonthlyPage();});
     tap('b8',function(){openAuditPage();});
-    tap('b9',function(){openPresentList();});
   } else {
     var gPerms=currentUser.permissions||{canCheckin:true,canCheckout:true};
-    statsRow.innerHTML='<div class="stat-card green full" style="cursor:pointer;" onclick="openPresentList()"><div class="stat-dot"></div><div class="stat-num" id="checkinsCount">—</div><div class="stat-label">'+t('todayCheckins')+'</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">'+t('presentListSub')+' ↓</div></div>';
+    statsRow.innerHTML='<div class="stat-card green full"><div class="stat-dot"></div><div class="stat-num" id="checkinsCount">—</div><div class="stat-label" data-t="todayCheckins">'+t('todayCheckins')+'</div></div>';
     var btns='';
     var btnIdx=2;
-    // stat card: clickable only if canViewPresent
-    var statClick=gPerms.canViewPresent?' style="cursor:pointer;" onclick="openPresentList()"':'';
-    var statHint=gPerms.canViewPresent?'<div style="font-size:11px;color:var(--text3);margin-top:4px;">'+t('presentListSub')+' ↓</div>':'';
-    statsRow.innerHTML='<div class="stat-card green full"'+statClick+'><div class="stat-dot"></div><div class="stat-num" id="checkinsCount">—</div><div class="stat-label">'+t('todayCheckins')+'</div>'+statHint+'</div>';
     if(gPerms.canCheckin)  btns+='<button class="action-btn btn-checkin" id="gb'+btnIdx+'"><div class="btn-icon">✅</div><div class="btn-text"><span class="btn-main-text">'+t('checkIn')+'</span><span class="btn-sub-text">'+t('scanQrIn')+'</span></div><span class="btn-arrow">‹</span></button>';
     btnIdx++;
     if(gPerms.canCheckout) btns+='<button class="action-btn btn-checkout" id="gb'+btnIdx+'"><div class="btn-icon">🚪</div><div class="btn-text"><span class="btn-main-text">'+t('checkOut')+'</span><span class="btn-sub-text">'+t('scanQrOut')+'</span></div><span class="btn-arrow">‹</span></button>';
@@ -1010,8 +969,6 @@ function setupMainPage(){
     if(gPerms.canStats) btns+='<button class="action-btn btn-stats" id="gb'+btnIdx+'"><div class="btn-icon">📊</div><div class="btn-text"><span class="btn-main-text">'+t('attendanceStats')+'</span><span class="btn-sub-text">'+t('subFullLog')+'</span></div><span class="btn-arrow">‹</span></button>';
     btnIdx++;
     if(gPerms.canManageGuards) btns+='<button class="action-btn btn-admin" id="gb'+btnIdx+'"><div class="btn-icon">⚙️</div><div class="btn-text"><span class="btn-main-text">'+t('manageGuards')+'</span><span class="btn-sub-text">'+t('subAddEdit')+'</span></div><span class="btn-arrow">‹</span></button>';
-    btnIdx++;
-    if(gPerms.canViewPresent) btns+='<button class="action-btn" style="border-color:rgba(16,185,129,0.2);" id="gb'+btnIdx+'"><div class="btn-icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);">🟢</div><div class="btn-text"><span class="btn-main-text">'+t('viewPresent')+'</span><span class="btn-sub-text">'+t('subViewPresent')+'</span></div><span class="btn-arrow">‹</span></button>';
     actions.innerHTML=btns;
     var bi=2;
     if(gPerms.canCheckin)      {tap('gb'+bi,function(){openScanner('in');});bi++;}
@@ -1020,7 +977,6 @@ function setupMainPage(){
     if(gPerms.canManageEmps)   {tap('gb'+bi,function(){openEmployeesPage();});bi++;}
     if(gPerms.canStats)        {tap('gb'+bi,function(){openStatsPage();});bi++;}
     if(gPerms.canManageGuards) {tap('gb'+bi,function(){openAdminPage();});bi++;}
-    if(gPerms.canViewPresent)  {tap('gb'+bi,function(){openPresentList();});bi++;}
   }
   updateCounts();
 }
@@ -1304,7 +1260,7 @@ function loadGuards(){
   }).catch(function(e){list.innerHTML='<div class="empty-state">Error: '+e.message+'</div>';});
 }
 function openAddGuardModal(){
-  newGuardPerms={canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:false,canManageGuards:false,canViewPresent:false};
+  newGuardPerms={canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:false,canManageGuards:false};
   document.getElementById('addGuardUsername').value='';
   document.getElementById('addGuardPassword').value='';
   renderAddGuardPerms();
@@ -1323,7 +1279,7 @@ function addGuard(){
     loadGuards();
   }).catch(function(e){btn.textContent=t('addGuard');btn.disabled=false;alert(e.message);});
 }
-var PERM_KEYS = ['canCheckin','canCheckout','canRegisterEmp','canManageEmps','canStats','canManageGuards','canViewPresent'];
+var PERM_KEYS = ['canCheckin','canCheckout','canRegisterEmp','canManageEmps','canStats','canManageGuards'];
 var newGuardPerms = {canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:false,canManageGuards:false};
 
 function renderAddGuardPerms(){
@@ -1341,7 +1297,7 @@ function renderAddGuardPerms(){
     list.appendChild(div);
   });
 }
-var PERM_TKEYS = ['permCheckin','permCheckout','permRegisterEmp','permManageEmps','permStats','permManageGuards','permViewPresent'];
+var PERM_TKEYS = ['permCheckin','permCheckout','permRegisterEmp','permManageEmps','permStats','permManageGuards'];
 var currentPerms = {};
 
 function openEditGuard(g){
@@ -1472,7 +1428,6 @@ tap('bNewEmp',function(){document.getElementById('empName').value='';document.ge
 tap('bBackScan',stopScanner);tap('bStopScan',stopScanner);
 tap('bBackAdmin',function(){goToPage('page-main');});
   tap('bBackAudit',function(){goToPage('page-main');});
-  tap('bClosePresentList',function(){document.getElementById('presentListModal').classList.remove('active');});
   tap('bBackMonthly',function(){goToPage('page-main');});
 tap('bOpenAddGuard',openAddGuardModal);
 tap('bAddGuardCancel',function(){document.getElementById('addGuardModal').classList.remove('active');});
