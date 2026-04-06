@@ -27,8 +27,7 @@
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn-primary { background: var(--accent); color: #fff; }
         .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-        input, select { width: 100%; padding: 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); outline: none; margin-top: 5px; }
-        label { font-size: 14px; color: var(--text-dim); }
+        input { width: 100%; padding: 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); outline: none; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -53,7 +52,6 @@
             <button class="btn btn-ghost" style="width:45px; padding:0;" onclick="goToPage('page-settings')">⚙️</button>
         </div>
     </div>
-
     <div id="admin-tools" style="display:none;">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
             <button class="btn btn-ghost" onclick="goToPage('page-guards')" style="height:80px; flex-direction:column;">🛡️ <span>الحراس</span></button>
@@ -61,7 +59,6 @@
             <button class="btn btn-ghost" onclick="goToPage('page-reports')" style="grid-column:span 2; height:60px;">📊 التقارير</button>
         </div>
     </div>
-
     <button class="btn btn-primary" style="height:120px; font-size:20px;" onclick="goToPage('page-scanner')">📷 مسح الكود</button>
     <button class="btn btn-ghost" onclick="handleLogout()" style="margin-top:20px; color:var(--red);">تسجيل الخروج</button>
 </div>
@@ -73,15 +70,14 @@
         <div style="width:45px;"></div>
     </div>
     <div class="card">
-        <label>المظهر العام</label>
-        <button class="btn btn-ghost" onclick="toggleTheme()" id="setThemeBtn" style="margin-top:10px;">تبديل الوضع 🌙</button>
+        <button class="btn btn-ghost" onclick="toggleTheme()" id="setThemeBtn">تبديل الوضع 🌙</button>
     </div>
 </div>
 
 <div id="page-reports" class="page">
     <div class="header">
         <button class="btn btn-ghost" style="width:45px;" onclick="goToPage('page-main')">❯</button>
-        <h2>التقارير الشهرية</h2>
+        <h2>التقارير</h2>
         <div style="width:45px;"></div>
     </div>
     <div class="card">
@@ -89,7 +85,7 @@
             <input type="number" id="repYear" value="2026">
             <input type="number" id="repMonth" value="4">
         </div>
-        <button class="btn btn-primary" onclick="fetchMonthly()" style="margin-top:15px;">تحميل ملف Excel</button>
+        <button class="btn btn-primary" onclick="fetchMonthly()" style="margin-top:15px;">تحميل Excel</button>
     </div>
 </div>
 
@@ -101,16 +97,9 @@
     function applyTheme() {
         document.documentElement.setAttribute('data-theme', THEME);
         const icon = THEME === 'light' ? '🌙' : '☀️';
-        
-        // تحديث جميع الأزرار التي تحتوي على أيقونة الثيم
-        document.querySelectorAll('button[id*="ThemeBtn"]').forEach(btn => {
-            btn.textContent = icon;
-        });
-
+        document.querySelectorAll('button[id*="ThemeBtn"]').forEach(btn => btn.textContent = icon);
         const setBtn = document.getElementById('setThemeBtn');
-        if (setBtn) {
-            setBtn.textContent = (THEME === 'light' ? 'الوضع الليلي ' : 'الوضع النهاري ') + icon;
-        }
+        if (setBtn) setBtn.textContent = (THEME === 'light' ? 'الوضع الليلي ' : 'الوضع النهاري ') + icon;
     }
 
     function toggleTheme() {
@@ -122,35 +111,28 @@
     function goToPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        window.scrollTo(0, 0);
     }
 
     async function handleLogin() {
-        const user = document.getElementById('loginUser').value;
-        const pass = document.getElementById('loginPass').value;
-        if (!user || !pass) return alert('يرجى إدخال البيانات');
+        const user = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value.trim();
+        if (!user || !pass) return alert('أدخل البيانات');
 
         try {
             const res = await fetch(API_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'login', user, pass })
+                body: JSON.stringify({ action: 'login', username: user, password: pass })
             });
             const data = await res.json();
             if (data.result && data.result.success) {
-                currentUser = data.result.user;
+                currentUser = data.result;
                 sessionStorage.setItem('attendanceUser', JSON.stringify(currentUser));
                 setupMainPage();
                 goToPage('page-main');
             } else {
                 alert('خطأ في اسم المستخدم أو كلمة المرور');
             }
-        } catch (e) { alert('خطأ في الاتصال بالخادم'); }
-    }
-
-    function handleLogout() {
-        sessionStorage.removeItem('attendanceUser');
-        currentUser = null;
-        goToPage('page-login');
+        } catch (e) { alert('خطأ في الاتصال'); }
     }
 
     function setupMainPage() {
@@ -158,24 +140,9 @@
         document.getElementById('admin-tools').style.display = currentUser.role === 'admin' ? 'block' : 'none';
     }
 
-    async function fetchMonthly() {
-        const y = document.getElementById('repYear').value;
-        const m = document.getElementById('repMonth').value;
-        try {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getMonthlyReport', year: y, month: m })
-            });
-            const data = await res.json();
-            if (data.result && data.result.length > 0) {
-                const ws = XLSX.utils.json_to_sheet(data.result);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Report");
-                XLSX.writeFile(wb, `Attendance_Report_${y}_${m}.xlsx`);
-            } else {
-                alert('لا توجد بيانات لهذا الشهر');
-            }
-        } catch (e) { alert('خطأ في جلب التقرير'); }
+    function handleLogout() {
+        sessionStorage.removeItem('attendanceUser');
+        location.reload();
     }
 
     window.addEventListener('DOMContentLoaded', () => {
