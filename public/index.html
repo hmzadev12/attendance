@@ -2,133 +2,144 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EXPRO WHITE MODE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام EXPRO - إدارة الموظفين</title>
     <style>
-        /* إجبار الخلفية على اللون الأبيض */
-        html, body { 
-            background-color: #ffffff !important; 
-            color: #1a1a1a !important; 
-            margin: 0; 
+        :root {
+            --bg: #ffffff; /* خلفية بيضاء صافية */
+            --surface: #f8fafc;
+            --accent: #0284c7;
+            --text-main: #0f172a;
+            --border: #e2e8f0;
+        }
+
+        body { 
+            background-color: var(--bg); 
+            color: var(--text-main); 
             font-family: sans-serif; 
+            margin: 0; 
+            padding: 20px;
         }
 
-        /* تنسيق واجهة الدخول البيضاء */
-        .login-screen {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #f0f4f8; /* رمادي فاتح جداً للخلفية */
-        }
-
-        .white-card {
-            background: #ffffff;
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 360px;
-            text-align: center;
-            border: 1px solid #e1e8ed;
-        }
-
-        .ex-logo { font-size: 40px; font-weight: 800; margin-bottom: 20px; }
-        .ex-blue { color: #007bff; }
-        .ex-dark { color: #333; }
-
-        input {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-size: 16px;
-            background: #fff !important;
-            color: #000 !important;
-        }
-
-        .btn-blue {
-            width: 100%;
-            padding: 15px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        /* تنسيق لوحة التحكم النهارية */
-        .dashboard { display: none; padding: 20px; background: #fff; min-height: 100vh; }
-        .dashboard.active { display: block; }
-
-        .top-stat {
-            background: #2d3436; /* خليتها كحلي غامق جداً لتبرز الأرقام */
+        /* تنسيق بطاقة الإحصائيات العلوية */
+        .stats-card {
+            background: #1e293b; /* تم الإبقاء عليها غامقة للتباين */
             color: white;
             padding: 30px;
             border-radius: 20px;
             text-align: center;
-            margin-bottom: 20px;
             cursor: pointer;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .action-box {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            padding: 20px;
+        .stats-number { font-size: 50px; font-weight: bold; }
+
+        /* تنسيق جدول/قائمة الموظفين */
+        .employee-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 15px;
-            display: flex;
-            align-items: center;
+            padding: 15px;
             margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .emp-info { flex-grow: 1; text-align: right; }
+        
+        /* تنسيق الأزرار */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .btn-edit { background-color: #0284c7; color: white; } /* زر التعديل */
+        .btn-delete { background-color: #ef4444; color: white; }
+
+        /* نافذة التعديل المنبثقة (اختياري) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            z-index: 100;
+            width: 300px;
         }
     </style>
 </head>
 <body>
 
-<div id="loginPage" class="login-screen">
-    <div class="white-card">
-        <div class="ex-logo"><span class="ex-blue">EX</span><span class="ex-dark">PRO</span></div>
-        <input type="text" id="u" placeholder="اسم المستخدم">
-        <input type="password" id="p" placeholder="كلمة المرور">
-        <button class="btn-blue" onclick="start()">دخول للنظام</button>
-    </div>
-</div>
-
-<div id="mainPage" class="dashboard">
-    <h2 style="color:#333">لوحة التحكم</h2>
-    
-    <div class="top-stat" onclick="showList()">
-        <div style="font-size: 50px; font-weight: bold;">1</div>
+    <div class="stats-card" onclick="viewPresent()">
+        <div class="stats-number">1</div>
         <div>داخل الموقع الآن</div>
-        <small style="color:#aaa">(اضغط لعرض الأسماء)</small>
+        <small>(اضغط لعرض القائمة)</small>
     </div>
 
-    <div class="action-box">
-        <div style="font-size:30px; margin-left:15px;">✅</div>
-        <div><b>تسجيل دخول</b><br><small>مسح QR Code</small></div>
+    <h3>إدارة موظفي الأمن</h3>
+
+    <div id="employeeList">
+        <div class="employee-item" id="emp-22">
+            <div class="emp-info">
+                <strong>الموظف: 22</strong><br>
+                <small>كلمة المرور: 22</small>
+            </div>
+            <div>
+                <button class="btn btn-edit" onclick="editEmployee('22')">تعديل</button>
+                <button class="btn btn-delete" onclick="deleteEmployee('22')">حذف</button>
+            </div>
+        </div>
     </div>
 
-    <div class="action-box">
-        <div style="font-size:30px; margin-left:15px;">🚪</div>
-        <div><b>تسجيل خروج</b><br><small>إنهاء العمل</small></div>
+    <div id="editModal" class="modal">
+        <h4>تعديل بيانات الموظف</h4>
+        <input type="text" id="newName" placeholder="الاسم الجديد" style="width:100%; padding:8px; margin-bottom:10px;">
+        <button class="btn btn-edit" onclick="saveEdit()">حفظ التعديلات</button>
+        <button class="btn" onclick="closeModal()">إلغاء</button>
     </div>
 
-    <button onclick="location.reload()" style="width:100%; margin-top:20px; background:none; border:1px dotted red; color:red; padding:10px; border-radius:10px;">تسجيل خروج</button>
-</div>
+    <script>
+        let currentEditId = '';
 
-<script>
-    function start() {
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('mainPage').classList.add('active');
-    }
-    function showList() {
-        alert("القائمة: \n1- مالك علي (10:03 م)");
-    }
-</script>
+        // دالة تفعيل زر التعديل
+        function editEmployee(id) {
+            currentEditId = id;
+            document.getElementById('editModal').style.display = 'block';
+            console.log("جاري تعديل الموظف رقم: " + id);
+        }
 
+        function saveEdit() {
+            const name = document.getElementById('newName').value;
+            if(name) {
+                alert("تم تحديث بيانات الموظف " + currentEditId + " إلى: " + name);
+                closeModal();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // دالة عرض الحاضرين المرتبطة بالرقم العلوي
+        function viewPresent() {
+            alert("قائمة المتواجدين حالياً: \n1- موظف 22");
+        }
+
+        function deleteEmployee(id) {
+            if(confirm("هل أنت متأكد من حذف الموظف؟")) {
+                document.getElementById('emp-' + id).remove();
+            }
+        }
+    </script>
 </body>
 </html>
