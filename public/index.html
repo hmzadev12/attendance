@@ -327,7 +327,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <button class="login-btn" id="bLogin" data-t="login">دخول</button>
     </div>
   </div>
-    <div style="margin-top:32px;font-size:10px;color:var(--text3);text-align:center;letter-spacing:0.3px;">by. <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bad2d7c0dbdedfccfaddd7dbd3d694d9d5d7">[email&#160;protected]</a></div>
+    <div style="margin-top:32px;font-size:10px;color:var(--text3);text-align:center;letter-spacing:0.3px;">by. hmzadev@gmail.com</div>
   </div>
 </div>
 
@@ -347,14 +347,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="stats-row" id="mainStatsRow"></div>
   <div class="actions" id="mainActions"></div>
   <button class="logout-btn no-print" id="bLogout" data-t="logout">⬅ تسجيل الخروج</button>
-  <div style="text-align:center;padding:6px 0 16px;font-size:10px;color:var(--text3);letter-spacing:0.3px;">by. <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="432b2e392227263503242e222a2f6d202c2e">[email&#160;protected]</a></div>
+  <div style="text-align:center;padding:6px 0 16px;font-size:10px;color:var(--text3);letter-spacing:0.3px;">by. hmzadev@gmail.com</div>
 </div>
 
 <!-- REGISTER EMPLOYEE -->
 <div class="page" id="page-register">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackReg">←</button></div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><span data-t="registerEmp">تسجيل موظف جديد</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><span data-t="registerEmp">تسجيل موظف جديد</span>
     <button class="lang-btn" id="regLangBtn">EN</button>
   </div>
   <div class="page-body">
@@ -569,7 +569,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ===================== TRANSLATIONS =====================
 var LANG = 'ar';
 var T = {
@@ -874,25 +874,33 @@ function toggleLang(){
 }
 
 // ===================== CORE =====================
-var currentPage='page-login', currentUser=null;
+var currentPage='page-login', currentUser=null;AUTH_TOKEN='';sessionStorage.clear();
 var scanMode='in', scanCooldown=false, cooldownTimer=null;
 var COOLDOWN_MS=800, sessionCount=0, lastCode='', lastCodeTime=0;
 var camStream=null, camRunning=false, rafId=null;
 var allEmployees=[], editingGuardData=null, editingEmpData=null;
 var deleteCallback=null, selectedEmpIds=[];
 
+var AUTH_TOKEN = '';
 async function callAPI(params){
-  var res = await fetch('/.netlify/functions/api', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(params)
-  });
-  var data = await res.json();
-  if(data.error) throw new Error(data.error);
+  // Attach token to every request except login
+  if(params.action !== 'login'){
+    params.token = AUTH_TOKEN || sessionStorage.getItem('exproToken') || '';
+  }
+  var res=await fetch('/.netlify/functions/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(params)});
+  var text=await res.text();
+  if(!text)throw new Error('Empty response');
+  var data;try{data=JSON.parse(text);}catch(e){throw new Error('Response error');}
+  if(data.error){
+    if(res.status===401 || res.status===403){
+      currentUser=null;AUTH_TOKEN='';sessionStorage.clear();
+      goToPage('page-login');
+      throw new Error('انتهت الجلسة — يرجى تسجيل الدخول');
+    }
+    throw new Error(data.error);
+  }
   return data.result;
 }
-
-
 
 function goToPage(id){
   document.getElementById(currentPage).classList.remove('active');
@@ -919,6 +927,10 @@ function doLogin(){
   callAPI({action:'login',password:pass}).then(function(result){
     btn.textContent=t('login');btn.disabled=false;
     if(result&&result.success){currentUser=result;
+      if(result.token){
+        AUTH_TOKEN=result.token;
+        sessionStorage.setItem('exproToken',result.token);
+      }
       sessionStorage.setItem('attendanceUser',JSON.stringify(currentUser));beep(true);flash(true);document.getElementById('loginPassword').value='';setupMainPage();goToPage('page-main');}
     else{beep(false);flash(false);errEl.textContent=t('wrongPass');}
   }).catch(function(e){btn.textContent=t('login');btn.disabled=false;errEl.textContent='❌ '+e.message;});
@@ -1021,7 +1033,7 @@ function openEmployeesPage(){goToPage('page-employees');loadEmployees();}
 function loadEmployees(){
   var list=document.getElementById('employeesList');
   list.innerHTML='<div class="empty-state">'+t('loading')+'</div>';
-  callAPI({action:'getEmployees'}).then(function(employees){
+  callAPI({action:'getEmployees',token:AUTH_TOKEN}).then(function(employees){
     allEmployees=employees||[];
     list.innerHTML='';
     var banner=document.createElement('div');banner.className='emp-header-banner';
@@ -1245,7 +1257,7 @@ function openAdminPage(){
 function loadGuards(){
   var list=document.getElementById('guardsList');
   list.innerHTML='<div class="empty-state">'+t('loading')+'</div>';
-  callAPI({action:'getGuards'}).then(function(guards){
+  callAPI({action:'getGuards',token:AUTH_TOKEN}).then(function(guards){
     if(!guards||guards.length===0){list.innerHTML='<div class="empty-state">'+t('noGuards')+'</div>';return;}
     list.innerHTML='';
     guards.forEach(function(g){
@@ -1416,7 +1428,7 @@ function handleResult(res){
 function setCamStatus(msg,type){var el=document.getElementById('camStatusBar');el.textContent=msg;el.className='cam-status-bar'+(type?' '+type:'');}
 function manualSubmit(){}
 function stopScanner(){if(cooldownTimer){clearTimeout(cooldownTimer);cooldownTimer=null;}scanCooldown=false;stopCamera();hideResult();goToPage('page-main');}
-function logout(){currentUser=null;sessionStorage.clear();document.getElementById('loginErr').textContent='';document.getElementById('loginPassword').value='';goToPage('page-login');}
+function logout(){currentUser=null;AUTH_TOKEN='';sessionStorage.clear();document.getElementById('loginErr').textContent='';document.getElementById('loginPassword').value='';goToPage('page-login');}
 
 // ===================== BIND EVENTS =====================
 tap('bLogin',doLogin);
@@ -1489,4 +1501,19 @@ applyLang();
       setupMainPage();
       goToPage('page-main');
         }
-  }catch(e){sessionStorag
+  }catch(e){sessionStorage.removeItem('attendanceUser');}
+})();
+// Restore session after refresh
+(function(){
+  try{
+    var saved=sessionStorage.getItem('attendanceUser');
+    if(saved){
+      currentUser=JSON.parse(saved);
+      setupMainPage();
+      goToPage('page-main');
+    }
+  }catch(e){sessionStorage.removeItem('attendanceUser');}
+})();
+</script>
+</body>
+</html>
