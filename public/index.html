@@ -868,77 +868,13 @@ var camStream=null, camRunning=false, rafId=null;
 var allEmployees=[], editingGuardData=null, editingEmpData=null;
 var deleteCallback=null, selectedEmpIds=[];
 
-var DEMO_TODAY=new Date().toLocaleDateString('en-CA');
-var DEMO_EMPLOYEES=[
-  {rowNum:2,name:'أحمد محمد العلي',job:'مهندس برمجيات',id:'EMP-A1B2C3D4E5'},
-  {rowNum:3,name:'سارة خالد الزهراني',job:'محاسبة',id:'EMP-F6G7H8I9J0'},
-  {rowNum:4,name:'محمد عبدالله القحطاني',job:'مدير مشاريع',id:'EMP-K1L2M3N4O5'},
-  {rowNum:5,name:'نورة سعد الدوسري',job:'موارد بشرية',id:'EMP-P6Q7R8S9T0'},
-  {rowNum:6,name:'فهد عبدالرحمن المطيري',job:'مصمم جرافيك',id:'EMP-U1V2W3X4Y5'},
-];
-var DEMO_GUARDS=[
-  {rowNum:3,username:'حسن أمين',password:'guard1',assigned:[],permissions:{canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:true,canManageGuards:false,canViewPresent:true}},
-  {rowNum:4,username:'خالد نور',password:'guard2',assigned:[],permissions:{canCheckin:true,canCheckout:true,canRegisterEmp:true,canManageEmps:true,canStats:false,canManageGuards:false,canViewPresent:false}},
-];
-var DEMO_ATTENDANCE=[
-  {date:DEMO_TODAY,empId:'EMP-A1B2C3D4E5',empName:'أحمد محمد العلي',timeIn:'08:12:00 AM',timeOut:'04:30:00 PM',hours:'8.30',entryNum:'1',scannedBy:'حسن أمين'},
-  {date:DEMO_TODAY,empId:'EMP-F6G7H8I9J0',empName:'سارة خالد الزهراني',timeIn:'08:45:00 AM',timeOut:'',hours:'',entryNum:'1',scannedBy:'حسن أمين'},
-  {date:DEMO_TODAY,empId:'EMP-K1L2M3N4O5',empName:'محمد عبدالله القحطاني',timeIn:'09:00:00 AM',timeOut:'03:15:00 PM',hours:'6.25',entryNum:'1',scannedBy:'خالد نور'},
-  {date:DEMO_TODAY,empId:'EMP-P6Q7R8S9T0',empName:'نورة سعد الدوسري',timeIn:'07:55:00 AM',timeOut:'04:00:00 PM',hours:'8.08',entryNum:'1',scannedBy:'خالد نور'},
-  {date:DEMO_TODAY,empId:'EMP-U1V2W3X4Y5',empName:'فهد عبدالرحمن المطيري',timeIn:'08:30:00 AM',timeOut:'',hours:'',entryNum:'1',scannedBy:'خالد نور'},
-];
-var DEMO_AUDIT=[
-  {datetime:DEMO_TODAY+' 09:15 AM',actor:'الأدمن',action:'إضافة موظف',details:'"فهد عبدالرحمن المطيري"'},
-  {datetime:DEMO_TODAY+' 08:50 AM',actor:'الأدمن',action:'تعديل موظف أمن',details:'"خالد نور"'},
-  {datetime:DEMO_TODAY+' 08:30 AM',actor:'الأدمن',action:'إضافة موظف أمن',details:'"حسن أمين"'},
-];
 async function callAPI(params){
-  await new Promise(function(r){setTimeout(r,250);});
-  switch(params.action){
-    case 'login':
-      if(params.password==='123') return {success:true,name:'الأدمن',role:'admin'};
-      var g=DEMO_GUARDS.find(function(x){return x.password===params.password;});
-      if(g) return {success:true,name:g.username,role:'guard',assigned:[],permissions:g.permissions};
-      return {success:false};
-    case 'getEmployees': return JSON.parse(JSON.stringify(DEMO_EMPLOYEES));
-    case 'getGuards': return JSON.parse(JSON.stringify(DEMO_GUARDS));
-    case 'currentPresent': return DEMO_ATTENDANCE.filter(function(r){return r.timeIn&&!r.timeOut;}).length;
-    case 'getPresentList': return DEMO_ATTENDANCE.filter(function(r){return r.timeIn&&!r.timeOut;}).map(function(r){return {id:r.empId,name:r.empName,timeIn:r.timeIn,scannedBy:r.scannedBy};});
-    case 'getAttendanceStats':
-      var rows=DEMO_ATTENDANCE.slice();
-      if(params.empId) rows=rows.filter(function(r){return r.empId===params.empId;});
-      var h=rows.reduce(function(s,r){return s+(parseFloat(r.hours)||0);},0);
-      return {rows:rows,present:rows.filter(function(r){return r.timeIn&&!r.timeOut;}).length,checkedOut:rows.filter(function(r){return r.timeOut;}).length,total:rows.length,totalHours:h.toFixed(2),dateFrom:params.dateFrom||DEMO_TODAY,dateTo:params.dateTo||DEMO_TODAY};
-    case 'getAuditLog': return JSON.parse(JSON.stringify(DEMO_AUDIT));
-    case 'getMonthlyReport':
-      var yr=params.year,mo=params.month,dim=new Date(yr,mo,0).getDate(),wd=0;
-      for(var d=1;d<=dim;d++){var dy=new Date(yr,mo-1,d).getDay();if(dy!==5&&dy!==6)wd++;}
-      var rep=DEMO_EMPLOYEES.map(function(e,i){var dp=Math.max(1,Math.floor(wd*(0.7+i*0.06)));return {id:e.id,name:e.name,job:e.job,daysPresent:dp,daysAbsent:wd-dp,workingDays:wd,totalHours:(dp*7.5).toFixed(2),entries:dp,attendanceRate:Math.round(dp/wd*100)};});
-      return {report:rep,workingDays:wd,year:yr,month:mo};
-    case 'registerEmployee':
-      var nid='EMP-'+Math.random().toString(36).substr(2,10).toUpperCase();
-      DEMO_EMPLOYEES.push({rowNum:DEMO_EMPLOYEES.length+2,name:params.name,job:params.job,id:nid});
-      DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'إضافة موظف',details:'"'+params.name+'"'});
-      return nid;
-    case 'editEmployee':
-      var ep=DEMO_EMPLOYEES.find(function(e){return e.rowNum===params.rowNum;});
-      if(ep){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'تعديل موظف',details:'"'+ep.name+'" -> "'+params.name+'"'});ep.name=params.name;ep.job=params.job;} return {success:true};
-    case 'deleteEmployee':
-      var ei=DEMO_EMPLOYEES.findIndex(function(e){return e.rowNum===params.rowNum;});
-      if(ei>-1){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'حذف موظف',details:'"'+DEMO_EMPLOYEES[ei].name+'"'});DEMO_EMPLOYEES.splice(ei,1);} return {success:true};
-    case 'addGuard':
-      DEMO_GUARDS.push({rowNum:DEMO_GUARDS.length+3,username:params.username,password:params.password,assigned:[],permissions:params.permissions||{}});
-      DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'إضافة موظف أمن',details:'"'+params.username+'"'});
-      return {success:true};
-    case 'editGuard':
-      var gp=DEMO_GUARDS.find(function(x){return x.rowNum===params.rowNum;});
-      if(gp){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'تعديل موظف أمن',details:'"'+params.username+'"'});gp.username=params.username;gp.password=params.password;gp.permissions=params.permissions||gp.permissions;} return {success:true};
-    case 'deleteGuard':
-      var gi=DEMO_GUARDS.findIndex(function(x){return x.rowNum===params.rowNum;});
-      if(gi>-1){DEMO_AUDIT.unshift({datetime:new Date().toLocaleString(),actor:params.actor||'system',action:'حذف موظف أمن',details:'"'+DEMO_GUARDS[gi].username+'"'});DEMO_GUARDS.splice(gi,1);} return {success:true};
-    case 'registerAttendance': return '✔ تم تسجيل الدخول: أحمد محمد العلي (وضع العرض)';
-    default: return null;
-  }
+  var res=await fetch('/.netlify/functions/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(params)});
+  var text=await res.text();
+  if(!text)throw new Error('Empty response');
+  var data;try{data=JSON.parse(text);}catch(e){throw new Error('Response error');}
+  if(data.error)throw new Error(data.error);
+  return data.result;
 }
 
 function goToPage(id){
@@ -965,7 +901,7 @@ function doLogin(){
   var btn=document.getElementById('bLogin');btn.textContent=t('checking');btn.disabled=true;
   callAPI({action:'login',password:pass}).then(function(result){
     btn.textContent=t('login');btn.disabled=false;
-    if(result&&result.success){currentUser=result;beep(true);flash(true);document.getElementById('loginPassword').value='';setupMainPage();goToPage('page-main');}
+    if(result&&result.success){currentUser=result;sessionStorage.setItem('attendanceUser',JSON.stringify(currentUser));beep(true);flash(true);document.getElementById('loginPassword').value='';setupMainPage();goToPage('page-main');}
     else{beep(false);flash(false);errEl.textContent=t('wrongPass');}
   }).catch(function(e){btn.textContent=t('login');btn.disabled=false;errEl.textContent='❌ '+e.message;});
 }
@@ -1463,7 +1399,7 @@ function handleResult(res){
 function setCamStatus(msg,type){var el=document.getElementById('camStatusBar');el.textContent=msg;el.className='cam-status-bar'+(type?' '+type:'');}
 function manualSubmit(){}
 function stopScanner(){if(cooldownTimer){clearTimeout(cooldownTimer);cooldownTimer=null;}scanCooldown=false;stopCamera();hideResult();goToPage('page-main');}
-function logout(){currentUser=null;document.getElementById('loginErr').textContent='';document.getElementById('loginPassword').value='';goToPage('page-login');}
+function logout(){currentUser=null;sessionStorage.removeItem('attendanceUser');document.getElementById('loginErr').textContent='';document.getElementById('loginPassword').value='';goToPage('page-login');}
 
 // ===================== BIND EVENTS =====================
 tap('bLogin',doLogin);
@@ -1509,6 +1445,17 @@ document.getElementById('loginPassword').addEventListener('keypress',function(e)
 // INIT
 LANG = localStorage.getItem('lang')||'ar';
 applyLang();
+// Restore session after refresh
+(function(){
+  try{
+    var saved=sessionStorage.getItem('attendanceUser');
+    if(saved){
+      currentUser=JSON.parse(saved);
+      setupMainPage();
+      goToPage('page-main');
+    }
+  }catch(e){sessionStorage.removeItem('attendanceUser');}
+})();
 </script>
 </body>
 </html>
