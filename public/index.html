@@ -570,7 +570,7 @@ var LANG = 'ar';
 var T = {
   ar: {
     appName:'EXPRO', welcome:'مرحباً', enterPass:'أدخل اسمك وكلمة المرور للدخول',
-    login:'دخول', passPlaceholder:'● ● ● ● ● ●', usernamePlaceholder:'اسم المستخدم', wrongPass:'❌ الاسم أو كلمة المرور غلط',
+    login:'دخول', passPlaceholder:'● ● ● ● ● ●', usernamePlaceholder:'أدخل اسم المستخدم', wrongPass:'❌ الاسم أو كلمة المرور غلط',
     checking:'جاري التحقق...', dashboard:'لوحة التحكم', controlPanel:'لوحة التحكم',
     helloUser:'مرحباً، {name} 👋', presentNow:'حاضر الآن', todayCheckins:'داخل الموقع الآن',
     registerEmp:'تسجيل موظف جديد', registerAndCreate:'تسجيل وإنشاء QR Code',
@@ -1461,7 +1461,6 @@ tap('bQrModalDownload',function(){
 
 document.getElementById('loginUsername').addEventListener('keypress',function(e){if(e.key==='Enter')document.getElementById('loginPassword').focus();});
 document.getElementById('loginPassword').addEventListener('keypress',function(e){if(e.key==='Enter')doLogin();});
-document.getElementById('loginUsername').addEventListener('keypress',function(e){if(e.key==='Enter')document.getElementById('loginPassword').focus();});
 
 
 // Theme: day mode only
