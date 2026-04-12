@@ -1,383 +1,232 @@
-// EXPRO Attendance System - API
 “use strict”;
-const crypto = require(“crypto”);
-
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
-const TIMEZONE = “Asia/Riyadh”;
-const SECRET = process.env.JWT_SECRET || “expro2026”;
-const attempts = {};
-
-// ?? BASE64URL ????????????????????????????????????????????????????????????????
-function b64url(s) {
-return Buffer.from(s).toString(“base64”)
-.replace(/+/g, “-”).replace(///g, “*”).replace(/=/g, “”);
+var crypto = require(“crypto”);
+var SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+var TIMEZONE = “Asia/Riyadh”;
+var SECRET = process.env.JWT_SECRET || “expro2026”;
+var attempts = {};
+function b64u(s){return Buffer.from(s).toString(“base64”).replace(/+/g,”-”).replace(///g,”*”).replace(/=/g,””);}
+function fb64u(s){return Buffer.from(s.replace(/-/g,”+”).replace(/*/g,”/”),“base64”).toString();}
+async function getT(){
+var c=JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+var n=Math.floor(Date.now()/1000);
+var h=b64u(JSON.stringify({alg:“RS256”,typ:“JWT”}));
+var cl=b64u(JSON.stringify({iss:c.client_email,scope:“https://www.googleapis.com/auth/spreadsheets”,aud:“https://oauth2.googleapis.com/token”,exp:n+3600,iat:n}));
+var u=h+”.”+cl;
+var k=crypto.createPrivateKey(c.private_key);
+var s=crypto.sign(“RSA-SHA256”,Buffer.from(u),k).toString(“base64”).replace(/+/g,”-”).replace(///g,”_”).replace(/=/g,””);
+var r=await fetch(“https://oauth2.googleapis.com/token”,{method:“POST”,headers:{“Content-Type”:“application/x-www-form-urlencoded”},body:“grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=”+u+”.”+s});
+var d=await r.json();
+if(!d.access_token)throw new Error(“auth:”+JSON.stringify(d));
+return d.access_token;
 }
-function fromb64url(s) {
-return Buffer.from(s.replace(/-/g,”+”).replace(/*/g,”/”), “base64”).toString();
+async function sg(t,r){
+var res=await fetch(“https://sheets.googleapis.com/v4/spreadsheets/”+SPREADSHEET_ID+”/values/”+encodeURIComponent(r),{headers:{Authorization:“Bearer “+t}});
+var d=await res.json();
+if(d.error)throw new Error(d.error.message);
+return d.values||[];
 }
-
-// ?? GOOGLE TOKEN ?????????????????????????????????????????????????????????????
-async function getGToken() {
-var creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-var now = Math.floor(Date.now() / 1000);
-var header = b64url(JSON.stringify({ alg: “RS256”, typ: “JWT” }));
-var claim  = b64url(JSON.stringify({
-iss: creds.client_email,
-scope: “https://www.googleapis.com/auth/spreadsheets”,
-aud: “https://oauth2.googleapis.com/token”,
-exp: now + 3600,
-iat: now
-}));
-var unsigned = header + “.” + claim;
-var key = crypto.createPrivateKey(creds.private_key);
-var sig = crypto.sign(“RSA-SHA256”, Buffer.from(unsigned), key)
-.toString(“base64”).replace(/+/g,”-”).replace(///g,”_”).replace(/=/g,””);
-var jwt = unsigned + “.” + sig;
-var res = await fetch(“https://oauth2.googleapis.com/token”, {
-method: “POST”,
-headers: { “Content-Type”: “application/x-www-form-urlencoded” },
-body: “grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=” + jwt
-});
-var data = await res.json();
-if (!data.access_token) throw new Error(“Google auth failed”);
-return data.access_token;
+async function su(t,r,v){
+var res=await fetch(“https://sheets.googleapis.com/v4/spreadsheets/”+SPREADSHEET_ID+”/values/”+encodeURIComponent(r)+”?valueInputOption=USER_ENTERED”,{method:“PUT”,headers:{Authorization:“Bearer “+t,“Content-Type”:“application/json”},body:JSON.stringify({values:v})});
+var d=await res.json();
+if(d.error)throw new Error(d.error.message);
+return d;
 }
-
-// ?? SHEETS HELPERS ???????????????????????????????????????????????????????????
-async function sGet(gt, range) {
-var url = “https://sheets.googleapis.com/v4/spreadsheets/” + SPREADSHEET_ID + “/values/” + encodeURIComponent(range);
-var res = await fetch(url, { headers: { Authorization: “Bearer “ + gt } });
-var data = await res.json();
-if (data.error) throw new Error(“SheetsGet: “ + data.error.message);
-return data.values || [];
+async function sa(t,r,v){
+var res=await fetch(“https://sheets.googleapis.com/v4/spreadsheets/”+SPREADSHEET_ID+”/values/”+encodeURIComponent(r)+”:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS”,{method:“POST”,headers:{Authorization:“Bearer “+t,“Content-Type”:“application/json”},body:JSON.stringify({values:v})});
+var d=await res.json();
+if(d.error)throw new Error(d.error.message);
+return d;
 }
-
-async function sUpdate(gt, range, values) {
-var url = “https://sheets.googleapis.com/v4/spreadsheets/” + SPREADSHEET_ID + “/values/” + encodeURIComponent(range) + “?valueInputOption=USER_ENTERED”;
-var res = await fetch(url, {
-method: “PUT”,
-headers: { Authorization: “Bearer “ + gt, “Content-Type”: “application/json” },
-body: JSON.stringify({ values: values })
-});
-var data = await res.json();
-if (data.error) throw new Error(“SheetsUpdate: “ + data.error.message);
-return data;
+async function sc(t,r){
+var res=await fetch(“https://sheets.googleapis.com/v4/spreadsheets/”+SPREADSHEET_ID+”/values/”+encodeURIComponent(r)+”:clear”,{method:“POST”,headers:{Authorization:“Bearer “+t,“Content-Type”:“application/json”}});
+var d=await res.json();
+if(d.error)throw new Error(d.error.message);
+return d;
 }
-
-async function sAppend(gt, range, values) {
-var url = “https://sheets.googleapis.com/v4/spreadsheets/” + SPREADSHEET_ID + “/values/” + encodeURIComponent(range) + “:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS”;
-var res = await fetch(url, {
-method: “POST”,
-headers: { Authorization: “Bearer “ + gt, “Content-Type”: “application/json” },
-body: JSON.stringify({ values: values })
-});
-var data = await res.json();
-if (data.error) throw new Error(“SheetsAppend: “ + data.error.message);
-return data;
+function signT(p){var b=b64u(JSON.stringify(p));return b+”.”+crypto.createHmac(“sha256”,SECRET).update(b).digest(“hex”);}
+function verT(token){
+if(!token)return null;
+try{
+var pts=token.split(”.”);
+if(pts.length!==2)return null;
+if(crypto.createHmac(“sha256”,SECRET).update(pts[0]).digest(“hex”)!==pts[1])return null;
+var p=JSON.parse(fb64u(pts[0]));
+if(p.exp&&Date.now()>p.exp)return null;
+return p;
+}catch(e){return null;}
 }
-
-async function sClear(gt, range) {
-var url = “https://sheets.googleapis.com/v4/spreadsheets/” + SPREADSHEET_ID + “/values/” + encodeURIComponent(range) + “:clear”;
-var res = await fetch(url, {
-method: “POST”,
-headers: { Authorization: “Bearer “ + gt, “Content-Type”: “application/json” }
-});
-var data = await res.json();
-if (data.error) throw new Error(“SheetsClear: “ + data.error.message);
-return data;
-}
-
-// ?? SESSION TOKEN ?????????????????????????????????????????????????????????????
-function signTok(payload) {
-var b64 = b64url(JSON.stringify(payload));
-var sig = crypto.createHmac(“sha256”, SECRET).update(b64).digest(“hex”);
-return b64 + “.” + sig;
-}
-function verifyTok(token) {
-if (!token) return null;
-try {
-var parts = token.split(”.”);
-if (parts.length !== 2) return null;
-var b64 = parts[0];
-var sig  = parts[1];
-var expected = crypto.createHmac(“sha256”, SECRET).update(b64).digest(“hex”);
-if (sig !== expected) return null;
-var payload = JSON.parse(fromb64url(b64));
-if (payload.exp && Date.now() > payload.exp) return null;
-return payload;
-} catch(e) { return null; }
-}
-
-// ?? RATE LIMIT ????????????????????????????????????????????????????????????????
-function checkRate(ip) {
-var now = Date.now();
-if (!attempts[ip] || now > attempts[ip].reset) {
-attempts[ip] = { count: 0, reset: now + 15 * 60 * 1000 };
-}
+function chkR(ip){
+var n=Date.now();
+if(!attempts[ip]||n>attempts[ip].reset)attempts[ip]={count:0,reset:n+900000};
 attempts[ip].count++;
-return attempts[ip].count <= 10;
+return attempts[ip].count<=10;
 }
-
-// ?? TIME ??????????????????????????????????????????????????????????????????????
-function nowTZ() {
-var now = new Date();
-return {
-date: now.toLocaleDateString(“en-CA”, { timeZone: TIMEZONE }),
-time: now.toLocaleTimeString(“en-US”, { timeZone: TIMEZONE, hour12: true })
-};
+function nowZ(){
+var n=new Date();
+return {date:n.toLocaleDateString(“en-CA”,{timeZone:TIMEZONE}),time:n.toLocaleTimeString(“en-US”,{timeZone:TIMEZONE,hour12:true})};
 }
-
-// ?? LOGIN ?????????????????????????????????????????????????????????????????????
-async function doLogin(gt, username, password, ip) {
-if (!username || !password) return { success: false };
-if (String(username).length > 100 || String(password).length > 100) return { success: false };
-if (!checkRate(ip)) return { success: false, locked: true };
-
-var rows = await sGet(gt, “Users!A:F”);
-for (var i = 1; i < rows.length; i++) {
-if (!rows[i] || !rows[i][1]) continue;
-var uname = String(rows[i][1] || “”).trim();
-var pass  = String(rows[i][2] || “”).trim();
-var role  = String(rows[i][3] || “”).trim().toLowerCase();
-if (uname.toLowerCase() === String(username).trim().toLowerCase() &&
-pass === String(password).trim()) {
-var tok = signTok({ name: uname, role: role, exp: Date.now() + 12 * 3600 * 1000 });
-return { success: true, name: uname, role: role, token: tok };
+function defPerms(){return {canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:false,canManageGuards:false,canViewPresent:false};}
+async function doLogin(gt,username,password,ip){
+if(!username||!password)return{success:false};
+if(!chkR(ip))return{success:false,locked:true};
+var rows=await sg(gt,“Users!A:F”);
+for(var i=1;i<rows.length;i++){
+if(!rows[i]||!rows[i][1])continue;
+var un=String(rows[i][1]||””).trim();
+var pw=String(rows[i][2]||””).trim();
+var ro=String(rows[i][3]||””).trim().toLowerCase();
+if(un.toLowerCase()===String(username).trim().toLowerCase()&&pw===String(password).trim()){
+var tok=signT({name:un,role:ro,exp:Date.now()+43200000});
+if(ro===“guard”){
+var gp=defPerms();
+try{if(rows[i][5])gp=JSON.parse(rows[i][5]);}catch(e){}
+return{success:true,name:un,role:ro,token:tok,permissions:gp,v:“v4”};
+}
+return{success:true,name:un,role:ro,token:tok,v:“v4”};
 }
 }
-return { success: false, v: “new3” };
+return{success:false,v:“v4”};
 }
-
-// ?? EMPLOYEES ?????????????????????????????????????????????????????????????????
-async function getEmployees(gt) {
-var rows = await sGet(gt, “Employees!A:D”);
-var list = [];
-for (var i = 1; i < rows.length; i++) {
-if (!rows[i] || !rows[i][2]) continue;
-list.push({ rowNum: i + 1, name: rows[i][0], job: rows[i][1], id: rows[i][2] });
+async function getEmps(gt){
+var rows=await sg(gt,“Employees!A:D”);
+var list=[];
+for(var i=1;i<rows.length;i++){
+if(!rows[i]||!rows[i][2])continue;
+list.push({rowNum:i+1,name:rows[i][0],job:rows[i][1],id:rows[i][2]});
 }
 return list;
 }
-
-async function registerEmployee(gt, name, job) {
-var id = “EMP-” + Math.random().toString(36).substr(2, 10).toUpperCase();
-await sAppend(gt, “Employees!A:D”, [[name, job, id, id]]);
+async function regEmp(gt,name,job){
+var id=“EMP-”+Math.random().toString(36).substr(2,10).toUpperCase();
+await sa(gt,“Employees!A:D”,[[name,job,id,id]]);
 return id;
 }
-
-async function editEmployee(gt, rowNum, name, job) {
-await sUpdate(gt, “Employees!A” + rowNum + “:B” + rowNum, [[name, job]]);
-return { success: true };
-}
-
-async function deleteEmployee(gt, rowNum) {
-await sClear(gt, “Employees!A” + rowNum + “:D” + rowNum);
-return { success: true };
-}
-
-// ?? GUARDS ????????????????????????????????????????????????????????????????????
-async function getGuards(gt) {
-var rows = await sGet(gt, “Users!A:F”);
-var list = [];
-for (var i = 1; i < rows.length; i++) {
-if (!rows[i] || !rows[i][1]) continue;
-if (String(rows[i][3] || “”).trim().toLowerCase() === “guard”) {
-var perms = {canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:false,canManageGuards:false,canViewPresent:false};
-try { if (rows[i][5]) perms = JSON.parse(rows[i][5]); } catch(e) {}
-list.push({ rowNum: i + 1, username: rows[i][1], password: rows[i][2], assigned: [], permissions: perms });
+async function editEmp(gt,rowNum,name,job){await su(gt,“Employees!A”+rowNum+”:B”+rowNum,[[name,job]]);return{success:true};}
+async function delEmp(gt,rowNum){await sc(gt,“Employees!A”+rowNum+”:D”+rowNum);return{success:true};}
+async function getGuards(gt){
+var rows=await sg(gt,“Users!A:F”);
+var list=[];
+for(var i=1;i<rows.length;i++){
+if(!rows[i]||!rows[i][1])continue;
+if(String(rows[i][3]||””).trim().toLowerCase()===“guard”){
+var gp=defPerms();
+try{if(rows[i][5])gp=JSON.parse(rows[i][5]);}catch(e){}
+list.push({rowNum:i+1,username:rows[i][1],password:rows[i][2],assigned:[],permissions:gp});
 }
 }
 return list;
 }
-
-async function addGuard(gt, username, password, permissions) {
-var rows = await sGet(gt, “Users!B:B”);
-for (var i = 1; i < rows.length; i++) {
-if (rows[i] && String(rows[i][0] || “”).trim().toLowerCase() === String(username).trim().toLowerCase()) {
-return { success: false, error: “user already exists” };
+async function addGuard(gt,username,password,permissions){
+var rows=await sg(gt,“Users!B:B”);
+for(var i=1;i<rows.length;i++){
+if(rows[i]&&String(rows[i][0]||””).trim().toLowerCase()===String(username).trim().toLowerCase())return{success:false,error:“exists”};
 }
+var perms=JSON.stringify(permissions||defPerms());
+await sa(gt,“Users!A:F”,[[””,username,password,“guard”,””,perms]]);
+return{success:true};
 }
-var perms = JSON.stringify(permissions || {canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:false,canManageGuards:false,canViewPresent:false});
-await sAppend(gt, “Users!A:F”, [[””, username, password, “guard”, “”, perms]]);
-return { success: true };
+async function editGuard(gt,rowNum,username,password,permissions){
+var perms=JSON.stringify(permissions||defPerms());
+await su(gt,“Users!B”+rowNum+”:F”+rowNum,[[username,password,“guard”,””,perms]]);
+return{success:true};
 }
-
-async function editGuard(gt, rowNum, username, password, permissions) {
-var perms = JSON.stringify(permissions || {canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:false,canManageGuards:false,canViewPresent:false});
-await sUpdate(gt, “Users!B” + rowNum + “:F” + rowNum, [[username, password, “guard”, “”, perms]]);
-return { success: true };
+async function delGuard(gt,rowNum){
+var rows=await sg(gt,“Users!D”+rowNum+”:D”+rowNum);
+if(rows[0]&&String(rows[0][0]||””).toLowerCase()===“admin”)return{success:false,error:“no”};
+await sc(gt,“Users!A”+rowNum+”:F”+rowNum);
+return{success:true};
 }
-
-async function deleteGuard(gt, rowNum) {
-var rows = await sGet(gt, “Users!D” + rowNum + “:D” + rowNum);
-if (rows[0] && String(rows[0][0] || “”).toLowerCase() === “admin”) {
-return { success: false, error: “no” };
+async function curPresent(gt){
+var rows=await sg(gt,“Attendance!A:H”);
+var today=nowZ().date;
+var last={};
+for(var i=1;i<rows.length;i++){if(rows[i]&&rows[i][0]===today)last[rows[i][1]]=rows[i];}
+var cnt=0;
+var keys=Object.keys(last);
+for(var k=0;k<keys.length;k++){if(last[keys[k]][3]&&!last[keys[k]][4])cnt++;}
+return cnt;
 }
-await sClear(gt, “Users!A” + rowNum + “:E” + rowNum);
-return { success: true };
+function pTime(t){
+var pts=t.split(” “);var hms=pts[0].split(”:”);
+var h=parseInt(hms[0],10),m=parseInt(hms[1],10),s=parseInt(hms[2]||“0”,10);
+if(pts[1]===“PM”&&h!==12)h+=12;
+if(pts[1]===“AM”&&h===12)h=0;
+return h*3600+m*60+s;
 }
-
-// ?? ATTENDANCE ????????????????????????????????????????????????????????????????
-async function currentPresent(gt) {
-var rows = await sGet(gt, “Attendance!A:H”);
-var today = nowTZ().date;
-var last = {};
-for (var i = 1; i < rows.length; i++) {
-if (rows[i] && rows[i][0] === today) last[rows[i][1]] = rows[i];
+async function regAtt(gt,qrCode,mode,scannedBy){
+var empRows=await sg(gt,“Employees!A:D”);
+var emp=null;
+for(var i=1;i<empRows.length;i++){
+if(String(empRows[i][3]||””).trim()===String(qrCode).trim()){emp={name:empRows[i][0],id:empRows[i][2]};break;}
 }
-var count = 0;
-var keys = Object.keys(last);
-for (var k = 0; k < keys.length; k++) {
-if (last[keys[k]][3] && !last[keys[k]][4]) count++;
+if(!emp)return”ERR:not found”;
+var z=nowZ(),date=z.date,time=z.time;
+var arows=await sg(gt,“Attendance!A:H”);
+var li=-1,lr=null,cnt=0;
+for(var j=1;j<arows.length;j++){
+if(arows[j][0]===date&&arows[j][1]===emp.id){li=j+1;lr=arows[j];cnt++;}
 }
-return count;
+if(mode===“in”){
+if(lr&&!lr[4])return”WARN:already in”;
+await sa(gt,“Attendance!A:H”,[[date,emp.id,emp.name,time,””,””,cnt+1,scannedBy||””]]);
+return”OK_IN:”+emp.name;
 }
-
-function parseTime(t) {
-var parts = t.split(” “);
-var tm = parts[0];
-var period = parts[1];
-var hms = tm.split(”:”);
-var h = parseInt(hms[0], 10);
-var m = parseInt(hms[1], 10);
-var s = parseInt(hms[2] || “0”, 10);
-if (period === “PM” && h !== 12) h += 12;
-if (period === “AM” && h === 12) h = 0;
-return h * 3600 + m * 60 + s;
+if(mode===“out”){
+if(li===-1||(lr&&lr[4]))return”WARN:no open”;
+var diff=pTime(time)-pTime(lr[3]);
+if(diff<0)diff+=86400;
+var hrs=(diff/3600).toFixed(2);
+await su(gt,“Attendance!E”+li+”:H”+li,[[time,hrs,lr[6]||””,scannedBy||””]]);
+return”OK_OUT:”+emp.name+”(”+hrs+”)”;
 }
-
-async function registerAttendance(gt, qrCode, mode, scannedBy) {
-var empRows = await sGet(gt, “Employees!A:D”);
-var emp = null;
-for (var i = 1; i < empRows.length; i++) {
-if (String(empRows[i][3] || “”).trim() === String(qrCode).trim()) {
-emp = { name: empRows[i][0], id: empRows[i][2] };
-break;
+return”error”;
 }
+async function getStats(gt,df,dt,eid){
+var rows=await sg(gt,“Attendance!A:H”);
+var today=nowZ().date,from=df||today,to=dt||today,fil=[],th=0;
+for(var i=1;i<rows.length;i++){
+if(!rows[i]||!rows[i][0])continue;
+if(rows[i][0]<from||rows[i][0]>to)continue;
+if(eid&&rows[i][1]!==eid)continue;
+fil.push({date:rows[i][0],empId:rows[i][1],empName:rows[i][2],timeIn:rows[i][3],timeOut:rows[i][4],hours:rows[i][5],entryNum:rows[i][6],scannedBy:rows[i][7]});
 }
-if (!emp) return “ERR: employee not found”;
-
-var tz = nowTZ();
-var date = tz.date;
-var time = tz.time;
-var attRows = await sGet(gt, “Attendance!A:H”);
-var lastIdx = -1;
-var lastRow = null;
-var count = 0;
-for (var j = 1; j < attRows.length; j++) {
-if (attRows[j][0] === date && attRows[j][1] === emp.id) {
-lastIdx = j + 1;
-lastRow = attRows[j];
-count++;
+for(var k=0;k<fil.length;k++)th+=parseFloat(fil[k].hours)||0;
+return{rows:fil,present:fil.filter(function(r){return r.timeIn&&!r.timeOut;}).length,checkedOut:fil.filter(function(r){return r.timeOut;}).length,total:fil.length,totalHours:th.toFixed(2)};
 }
+exports.handler=async function(event){
+var h={“Access-Control-Allow-Origin”:”*”,“Access-Control-Allow-Headers”:“Content-Type,Authorization”,“Content-Type”:“application/json”};
+if(event.httpMethod===“OPTIONS”)return{statusCode:200,headers:h,body:””};
+var p={};
+try{p=event.httpMethod===“POST”?JSON.parse(event.body||”{}”):event.queryStringParameters||{};}catch(e){return{statusCode:400,headers:h,body:JSON.stringify({error:“bad request”})};}
+var action=String(p.action||””);
+var ip=event.headers[“x-forwarded-for”]||“unknown”;
+try{
+if(action===“login”){
+var gt=await getT();
+var res=await doLogin(gt,p.username,p.password,ip);
+return{statusCode:200,headers:h,body:JSON.stringify({result:res})};
 }
-
-if (mode === “in”) {
-if (lastRow && !lastRow[4]) return “WARN: already checked in”;
-await sAppend(gt, “Attendance!A:H”, [[date, emp.id, emp.name, time, “”, “”, count + 1, scannedBy || “”]]);
-return “OK_IN: “ + emp.name;
-}
-if (mode === “out”) {
-if (lastIdx === -1 || (lastRow && lastRow[4])) return “WARN: no open entry”;
-var diff = parseTime(time) - parseTime(lastRow[3]);
-if (diff < 0) diff += 86400;
-var hours = (diff / 3600).toFixed(2);
-await sUpdate(gt, “Attendance!E” + lastIdx + “:H” + lastIdx, [[time, hours, lastRow[6] || “”, scannedBy || “”]]);
-return “OK_OUT: “ + emp.name + “ (” + hours + “)”;
-}
-return “error”;
-}
-
-async function getAttendanceStats(gt, dateFrom, dateTo, empId) {
-var rows = await sGet(gt, “Attendance!A:H”);
-var today = nowTZ().date;
-var from = dateFrom || today;
-var to   = dateTo   || today;
-var filtered = [];
-for (var i = 1; i < rows.length; i++) {
-if (!rows[i] || !rows[i][0]) continue;
-if (rows[i][0] < from || rows[i][0] > to) continue;
-if (empId && rows[i][1] !== empId) continue;
-filtered.push({
-date: rows[i][0], empId: rows[i][1], empName: rows[i][2],
-timeIn: rows[i][3], timeOut: rows[i][4], hours: rows[i][5],
-entryNum: rows[i][6], scannedBy: rows[i][7]
-});
-}
-var totalHours = 0;
-for (var k = 0; k < filtered.length; k++) {
-totalHours += parseFloat(filtered[k].hours) || 0;
-}
-return {
-rows: filtered,
-present:    filtered.filter(function(r) { return r.timeIn && !r.timeOut; }).length,
-checkedOut: filtered.filter(function(r) { return r.timeOut; }).length,
-total:      filtered.length,
-totalHours: totalHours.toFixed(2)
-};
-}
-
-// ?? HANDLER ???????????????????????????????????????????????????????????????????
-exports.handler = async function(event) {
-var headers = {
-“Access-Control-Allow-Origin”: “*”,
-“Access-Control-Allow-Headers”: “Content-Type,Authorization”,
-“Content-Type”: “application/json”
-};
-if (event.httpMethod === “OPTIONS”) return { statusCode: 200, headers: headers, body: “” };
-
-var params = {};
-try {
-params = event.httpMethod === “POST”
-? JSON.parse(event.body || “{}”)
-: (event.queryStringParameters || {});
-} catch(e) {
-return { statusCode: 400, headers: headers, body: JSON.stringify({ error: “Bad request” }) };
-}
-
-var action = String(params.action || “”);
-var ip = event.headers[“x-forwarded-for”] || “unknown”;
-
-try {
-if (action === “login”) {
-var gt = await getGToken();
-var result = await doLogin(gt, params.username, params.password, ip);
-return { statusCode: 200, headers: headers, body: JSON.stringify({ result: result }) };
-}
-
-```
-var sessionToken = params.token || (event.headers["authorization"] || "").replace("Bearer ", "");
-var user = verifyTok(sessionToken);
-if (!user) {
-  return { statusCode: 401, headers: headers, body: JSON.stringify({ error: "session expired" }) };
-}
-
-var isAdmin = user.role === "admin";
-var ADMIN_ONLY = ["addGuard", "editGuard", "deleteGuard", "getGuards"];
-if (ADMIN_ONLY.indexOf(action) !== -1 && !isAdmin) {
-  return { statusCode: 403, headers: headers, body: JSON.stringify({ error: "forbidden" }) };
-}
-
-var gt2 = await getGToken();
-var res2;
-if (action === "getEmployees")       res2 = await getEmployees(gt2);
-else if (action === "registerEmployee") res2 = await registerEmployee(gt2, params.name, params.job);
-else if (action === "editEmployee")  res2 = await editEmployee(gt2, params.rowNum, params.name, params.job);
-else if (action === "deleteEmployee") res2 = await deleteEmployee(gt2, params.rowNum);
-else if (action === "getGuards")     res2 = await getGuards(gt2);
-else if (action === "addGuard")      res2 = await addGuard(gt2, params.username, params.password);
-else if (action === "editGuard")     res2 = await editGuard(gt2, params.rowNum, params.username, params.password);
-else if (action === "deleteGuard")   res2 = await deleteGuard(gt2, params.rowNum);
-else if (action === "registerAttendance") res2 = await registerAttendance(gt2, params.qrCode, params.mode, params.scannedBy);
-else if (action === "currentPresent") res2 = await currentPresent(gt2);
-else if (action === "getAttendanceStats") res2 = await getAttendanceStats(gt2, params.dateFrom, params.dateTo, params.empId);
-else return { statusCode: 400, headers: headers, body: JSON.stringify({ error: "unknown action" }) };
-
-return { statusCode: 200, headers: headers, body: JSON.stringify({ result: res2 }) };
-```
-
-} catch(err) {
-console.error(“Error:”, err.message);
-return { statusCode: 500, headers: headers, body: JSON.stringify({ error: err.message }) };
+var tok=p.token||(event.headers[“authorization”]||””).replace(“Bearer “,””);
+var user=verT(tok);
+if(!user)return{statusCode:401,headers:h,body:JSON.stringify({error:“session expired”})};
+var isAdmin=user.role===“admin”;
+var AO=[“addGuard”,“editGuard”,“deleteGuard”,“getGuards”];
+if(AO.indexOf(action)!==-1&&!isAdmin)return{statusCode:403,headers:h,body:JSON.stringify({error:“forbidden”})};
+var gt2=await getT(),r2;
+if(action===“getEmployees”)r2=await getEmps(gt2);
+else if(action===“registerEmployee”)r2=await regEmp(gt2,p.name,p.job);
+else if(action===“editEmployee”)r2=await editEmp(gt2,p.rowNum,p.name,p.job);
+else if(action===“deleteEmployee”)r2=await delEmp(gt2,p.rowNum);
+else if(action===“getGuards”)r2=await getGuards(gt2);
+else if(action===“addGuard”)r2=await addGuard(gt2,p.username,p.password,p.permissions);
+else if(action===“editGuard”)r2=await editGuard(gt2,p.rowNum,p.username,p.password,p.permissions);
+else if(action===“deleteGuard”)r2=await delGuard(gt2,p.rowNum);
+else if(action===“registerAttendance”)r2=await regAtt(gt2,p.qrCode,p.mode,p.scannedBy);
+else if(action===“currentPresent”)r2=await curPresent(gt2);
+else if(action===“getAttendanceStats”)r2=await getStats(gt2,p.dateFrom,p.dateTo,p.empId);
+else return{statusCode:400,headers:h,body:JSON.stringify({error:“unknown”})};
+return{statusCode:200,headers:h,body:JSON.stringify({result:r2})};
+}catch(err){
+return{statusCode:500,headers:h,body:JSON.stringify({error:err.message})};
 }
 };
