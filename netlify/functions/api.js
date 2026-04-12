@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const TIMEZONE = "Asia/Riyadh";
 const SECRET = process.env.JWT_SECRET || "expro2026";
-
+const attempts = {};
 function b64url(s) {
   return Buffer.from(s).toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=/g,"");
 }
@@ -62,12 +62,19 @@ function verifyTok(token) {
     return p;
   } catch(e) { return null; }
 }
+function checkRate(ip) {
+  var now = Date.now();
+  if (!attempts[ip]||now>attempts[ip].reset) attempts[ip]={count:0,reset:now+900000};
+  attempts[ip].count++;
+  return attempts[ip].count<=10;
+}
 function nowTZ() {
   var now = new Date();
   return {date:now.toLocaleDateString("en-CA",{timeZone:TIMEZONE}),time:now.toLocaleTimeString("en-US",{timeZone:TIMEZONE,hour12:true})};
 }
-async function doLogin(gt,username,password) {
+async function doLogin(gt,username,password,ip) {
   if (!username||!password) return {success:false};
+  if (!checkRate(ip)) return {success:false,locked:true};
   var rows = await sGet(gt,"Users!A:E");
   for (var i=1;i<rows.length;i++) {
     if (!rows[i]||!rows[i][1]) continue;
@@ -192,10 +199,11 @@ exports.handler = async function(event) {
   var params={};
   try {params=event.httpMethod==="POST"?JSON.parse(event.body||"{}"):event.queryStringParameters||{};} catch(e) {return {statusCode:400,headers:h,body:JSON.stringify({error:"bad request"})};}
   var action=String(params.action||"");
+  var ip=event.headers["x-forwarded-for"]||"unknown";
   try {
     if (action==="login") {
       var gt=await getGToken();
-      var result=await doLogin(gt,params.username,params.password);
+      var result=await doLogin(gt,params.username,params.password,ip);
       return {statusCode:200,headers:h,body:JSON.stringify({result:result})};
     }
     var tok=params.token||(event.headers["authorization"]||"").replace("Bearer ","");
