@@ -156,7 +156,7 @@ async function curPresent(gt){
   var rows=await sGet(gt,"Attendance!A:H"),today=nowTZ().date,last={};
   for(var i=1;i<rows.length;i++){if(rows[i]&&rows[i][0]===today)last[rows[i][1]]=rows[i];}
   var cnt=0,keys=Object.keys(last);
-  for(var k=0;k<keys.length;k++){if(last[keys[k]][3]&&!last[keys[k]][4])cnt++;}
+  for(var k=0;k<keys.length;k++){var tout=last[keys[k]][4]||"";if(last[keys[k]][3]&&(!tout||tout==="-"))cnt++;}
   return cnt;
 }
 
@@ -181,7 +181,7 @@ async function regAtt(gt,qr,mode,by){
   }
   if(mode==="in"){
     if(lr&&!lr[4])return"WARN:already in";
-    await sAdd(gt,"Attendance!A:H",[[dt,emp.id,emp.name,tm,"","",cnt+1,by||""]]);
+    await sAdd(gt,"Attendance!A:H",[[dt,emp.id,emp.name,tm,"-","-",cnt+1,by||"-"]]);
     return"OK_IN:"+emp.name;
   }
   if(mode==="out"){
@@ -189,7 +189,7 @@ async function regAtt(gt,qr,mode,by){
     var diff=pT(tm)-pT(lr[3]);
     if(diff<0)diff+=86400;
     var hrs=(diff/3600).toFixed(2);
-    await sSet(gt,"Attendance!E"+li+":H"+li,[[tm,hrs,lr[6]||"",by||""]]);
+    await sSet(gt,"Attendance!E"+li+":H"+li,[[tm,hrs,lr[6]||"-",by||"-"]]);
     return"OK_OUT:"+emp.name+"("+hrs+")";
   }
   return"ERR:bad mode";
@@ -202,10 +202,16 @@ async function getStats(gt,df,dt,eid){
     if(!rows[i]||!rows[i][0])continue;
     if(rows[i][0]<from||rows[i][0]>to)continue;
     if(eid&&rows[i][1]!==eid)continue;
-    fil.push({date:rows[i][0],empId:rows[i][1],empName:rows[i][2],timeIn:rows[i][3],timeOut:rows[i][4],hours:rows[i][5],entryNum:rows[i][6],scannedBy:rows[i][7]});
+    var tout2=rows[i][4]||"";var touthours=rows[i][5]||"";
+    fil.push({date:rows[i][0],empId:rows[i][1],empName:rows[i][2],
+      timeIn:rows[i][3]||"",
+      timeOut:tout2==="-"?"":tout2,
+      hours:touthours==="-"?"":touthours,
+      entryNum:rows[i][6]||"",
+      scannedBy:(rows[i][7]&&rows[i][7]!=="-")?rows[i][7]:""});
   }
   for(var k=0;k<fil.length;k++)th+=parseFloat(fil[k].hours)||0;
-  return{rows:fil,present:fil.filter(function(r){return r.timeIn&&!r.timeOut;}).length,checkedOut:fil.filter(function(r){return r.timeOut;}).length,total:fil.length,totalHours:th.toFixed(2)};
+  return{rows:fil,present:fil.filter(function(r){return r.timeIn&&(!r.timeOut||r.timeOut==="-");}).length,checkedOut:fil.filter(function(r){return r.timeOut&&r.timeOut!=="-";}).length,total:fil.length,totalHours:th.toFixed(2)};
 }
 
 
@@ -229,7 +235,7 @@ async function getPresentList(gt){
   var keys=Object.keys(last);
   for(var k=0;k<keys.length;k++){
     var r=last[keys[k]];
-    if(r[3]&&!r[4])list.push({empId:r[1],empName:r[2],timeIn:r[3],scannedBy:r[7]||""});
+    var tout=r[4]||"";if(r[3]&&(!tout||tout==="-"))list.push({empId:r[1],empName:r[2],timeIn:r[3],scannedBy:r[7]&&r[7]!=="-"?r[7]:""});
   }
   return list;
 }
