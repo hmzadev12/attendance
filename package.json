@@ -1,7 +1,6 @@
 {
-  "name": "attendance-system",
+  "name": "expro-attendance-api",
   "version": "1.0.0",
-  "description": "Attendance System with Google Sheets",
   "dependencies": {
     "googleapis": "^140.0.0"
   }
