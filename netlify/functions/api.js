@@ -192,7 +192,7 @@ async function addGuard(gt, username, password) {
 var rows = await sGet(gt, “Users!B:B”);
 for (var i = 1; i < rows.length; i++) {
 if (rows[i] && String(rows[i][0] || “”).trim().toLowerCase() === String(username).trim().toLowerCase()) {
-return { success: false, error: “اليوزر موجود مسبقاً” };
+return { success: false, error: “user already exists” };
 }
 }
 await sAppend(gt, “Users!A:E”, [[””, username, password, “guard”, “”]]);
@@ -251,7 +251,7 @@ emp = { name: empRows[i][0], id: empRows[i][2] };
 break;
 }
 }
-if (!emp) return “❌ الموظف غير موجود”;
+if (!emp) return “ERR: employee not found”;
 
 var tz = nowTZ();
 var date = tz.date;
@@ -269,17 +269,17 @@ count++;
 }
 
 if (mode === “in”) {
-if (lastRow && !lastRow[4]) return “⚠ مسجل دخول”;
+if (lastRow && !lastRow[4]) return “WARN: already checked in”;
 await sAppend(gt, “Attendance!A:H”, [[date, emp.id, emp.name, time, “”, “”, count + 1, scannedBy || “”]]);
-return “✔ تم تسجيل الدخول: “ + emp.name;
+return “OK_IN: “ + emp.name;
 }
 if (mode === “out”) {
-if (lastIdx === -1 || (lastRow && lastRow[4])) return “⚠ ما في دخول مفتوح”;
+if (lastIdx === -1 || (lastRow && lastRow[4])) return “WARN: no open entry”;
 var diff = parseTime(time) - parseTime(lastRow[3]);
 if (diff < 0) diff += 86400;
 var hours = (diff / 3600).toFixed(2);
 await sUpdate(gt, “Attendance!E” + lastIdx + “:H” + lastIdx, [[time, hours, lastRow[6] || “”, scannedBy || “”]]);
-return “✔ تم تسجيل الخروج: “ + emp.name + “ (” + hours + “)”;
+return “OK_OUT: “ + emp.name + “ (” + hours + “)”;
 }
 return “error”;
 }
