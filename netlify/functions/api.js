@@ -208,6 +208,59 @@ async function getStats(gt,df,dt,eid){
   return{rows:fil,present:fil.filter(function(r){return r.timeIn&&!r.timeOut;}).length,checkedOut:fil.filter(function(r){return r.timeOut;}).length,total:fil.length,totalHours:th.toFixed(2)};
 }
 
+
+async function getAuditLog(gt){
+  var rows=await sGet(gt,"AuditLog!A:D"),list=[];
+  for(var i=1;i<rows.length;i++){
+    if(!rows[i]||!rows[i][0])continue;
+    list.push({datetime:rows[i][0],actor:rows[i][1],action:rows[i][2],details:rows[i][3]||""});
+  }
+  list.reverse();
+  return list;
+}
+
+async function getPresentList(gt){
+  var rows=await sGet(gt,"Attendance!A:H");
+  var today=nowTZ().date,last={};
+  for(var i=1;i<rows.length;i++){
+    if(rows[i]&&rows[i][0]===today)last[rows[i][1]]=rows[i];
+  }
+  var list=[];
+  var keys=Object.keys(last);
+  for(var k=0;k<keys.length;k++){
+    var r=last[keys[k]];
+    if(r[3]&&!r[4])list.push({empId:r[1],empName:r[2],timeIn:r[3],scannedBy:r[7]||""});
+  }
+  return list;
+}
+
+async function getMonthlyReport(gt,month,year){
+  var rows=await sGet(gt,"Attendance!A:H");
+  var empRows=await sGet(gt,"Employees!A:D");
+  var emps={};
+  for(var i=1;i<empRows.length;i++){
+    if(empRows[i]&&empRows[i][2])emps[empRows[i][2]]={name:empRows[i][0],job:empRows[i][1]};
+  }
+  var m=String(month).padStart(2,"0");
+  var y=String(year);
+  var prefix=y+"-"+m;
+  var byEmp={};
+  for(var j=1;j<rows.length;j++){
+    if(!rows[j]||!rows[j][0])continue;
+    if(!rows[j][0].startsWith(prefix))continue;
+    var eid=rows[j][1];
+    if(!byEmp[eid])byEmp[eid]={empId:eid,empName:rows[j][2],days:{},totalHours:0};
+    byEmp[eid].days[rows[j][0]]=true;
+    byEmp[eid].totalHours+=parseFloat(rows[j][5])||0;
+  }
+  var result=[];
+  var eids=Object.keys(byEmp);
+  for(var k=0;k<eids.length;k++){
+    var e=byEmp[eids[k]];
+    result.push({empId:e.empId,empName:e.empName,daysPresent:Object.keys(e.days).length,totalHours:e.totalHours.toFixed(2)});
+  }
+  return result;
+}
 exports.handler=async function(event){
   var h={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"Content-Type,Authorization","Content-Type":"application/json"};
   if(event.httpMethod==="OPTIONS")return{statusCode:200,headers:h,body:""};
@@ -238,6 +291,9 @@ exports.handler=async function(event){
     else if(action==="registerAttendance")r2=await regAtt(gt2,p.qrCode,p.mode,p.scannedBy);
     else if(action==="currentPresent")r2=await curPresent(gt2);
     else if(action==="getAttendanceStats")r2=await getStats(gt2,p.dateFrom,p.dateTo,p.empId);
+    else if(action==="getAuditLog")r2=await getAuditLog(gt2);
+    else if(action==="getPresentList")r2=await getPresentList(gt2);
+    else if(action==="getMonthlyReport")r2=await getMonthlyReport(gt2,p.month,p.year);
     else return{statusCode:400,headers:h,body:JSON.stringify({error:"unknown_action"})};
     return{statusCode:200,headers:h,body:JSON.stringify({result:r2})};
   }catch(err){
