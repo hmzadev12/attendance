@@ -706,22 +706,12 @@ var T = {
 function t(key){ return (T[LANG][key]||T['ar'][key]||key); }
 
 function applyLang(){
-  // Fix logout button arrow direction
-  var logoutBtn = document.getElementById('bLogout');
-  if(logoutBtn) logoutBtn.textContent = LANG==='ar' ? '⬅ ' + t('logout').replace('Logout ➡','').replace('⬅ تسجيل الخروج','تسجيل الخروج') : t('logout');
-  // Fix back arrows
-  document.querySelectorAll('.back-arrow').forEach(function(el){
-    el.textContent = LANG==='ar' ? '←' : '→';
-  });
-  // Fix action button arrows (‹ in RTL, › in LTR)
-  document.querySelectorAll('.btn-arrow.dir-arrow').forEach(function(el){
-    el.textContent = LANG==='ar' ? '‹' : '›';
-  });
+  // Fix logout button arrow direction - done after refreshCurrentPage
   var isAr = LANG==='ar';
   document.documentElement.lang = LANG;
   document.documentElement.dir  = isAr?'rtl':'ltr';
   document.querySelectorAll('.lang-btn').forEach(function(btn){
-    if(btn.id&&btn.id.indexOf('Theme')>-1) return; // skip theme buttons
+    if(btn.id&&btn.id.indexOf('Theme')>-1) return;
     btn.textContent=isAr?'EN':'عر';
   });
   document.querySelectorAll('[data-t]').forEach(function(el){
@@ -732,9 +722,18 @@ function applyLang(){
   document.querySelectorAll('[data-ph]').forEach(function(el){
     el.placeholder=t(el.getAttribute('data-ph'));
   });
-  applyTheme(); // keep theme icons correct
-  // re-render dynamic pages
+  if(typeof applyTheme==='function') applyTheme();
+  // re-render dynamic pages FIRST so new elements exist
   refreshCurrentPage();
+  // THEN fix arrows on the newly created elements
+  document.querySelectorAll('.back-arrow').forEach(function(el){
+    el.textContent = isAr ? '←' : '→';
+  });
+  document.querySelectorAll('.btn-arrow.dir-arrow').forEach(function(el){
+    el.textContent = isAr ? '‹' : '›';
+  });
+  var logoutBtn = document.getElementById('bLogout');
+  if(logoutBtn) logoutBtn.textContent = isAr ? '⬅ تسجيل الخروج' : 'Logout ➡';
 }
 
 // ===================== PRESENT LIST =====================
@@ -1092,9 +1091,17 @@ function openQrModal(emp){
   document.getElementById('qrModalJob').textContent=emp.job;
   document.getElementById('qrModalId').textContent=emp.id;
   var d=new Date();document.getElementById('qrModalDate').textContent=d.toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
-  var w=document.getElementById('qrModalCanvas');w.innerHTML='';
-  new QRCode(w,{text:emp.id,width:155,height:155,colorDark:'#1e293b',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
-  document.getElementById('qrModal').classList.add('active');
+  var w=document.getElementById('qrModalCanvas');
+  w.innerHTML='';
+  try {
+    new QRCode(w,{text:emp.id,width:150,height:150,colorDark:'#1e293b',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  } catch(e) {
+    w.innerHTML='<div style="padding:20px;color:#666;font-size:12px;">'+emp.id+'</div>';
+  }
+  // Force show modal
+  var modal = document.getElementById('qrModal');
+  modal.style.display='flex';
+  modal.classList.add('active');
 }
 
 function openEditEmp(emp){
@@ -1483,7 +1490,11 @@ tap('bEditEmpSave',saveEditEmp);
 tap('bDeleteCancel',function(){document.getElementById('deleteModal').classList.remove('active');deleteCallback=null;});
 tap('bDeleteConfirm',function(){document.getElementById('deleteModal').classList.remove('active');if(deleteCallback){deleteCallback();deleteCallback=null;}});
 tap('bBackStats',function(){goToPage('page-main');});
-tap('bQrModalClose',function(){document.getElementById('qrModal').classList.remove('active');});
+tap('bQrModalClose',function(){
+  var m=document.getElementById('qrModal');
+  m.classList.remove('active');
+  m.style.display='';
+});
 tap('bQrModalDownload',function(){
   if(typeof html2canvas==='undefined')return;
   html2canvas(document.getElementById('qrModalCard'),{scale:3,useCORS:true,backgroundColor:'#ffffff'}).then(function(c){
