@@ -104,14 +104,18 @@ async function login(sheets, username, password, ip) {
 
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Users!A:F' });
   const rows = res.data.values || [];
+  console.log('LOGIN ATTEMPT - username:', JSON.stringify(username), 'password:', JSON.stringify(password));
+  console.log('ROWS COUNT:', rows.length);
   for (let i = 1; i < rows.length; i++) {
     if (!rows[i] || !rows[i][1]) continue;
     const role  = String(rows[i][3] || '').trim().toLowerCase();
     const pass  = String(rows[i][2] || '').trim();
     const uname = String(rows[i][1] || '').trim();
+    console.log(`ROW ${i}: uname=${JSON.stringify(uname)} pass=${JSON.stringify(pass)} role=${role}`);
     // Must match BOTH username AND password exactly
     const usernameMatch = uname.toLowerCase() === String(username).trim().toLowerCase();
     const passwordMatch = pass === String(password).trim();
+    console.log(`  usernameMatch=${usernameMatch} passwordMatch=${passwordMatch}`);
     if (usernameMatch && passwordMatch) {
       if (role === 'admin') {
         const token = signToken({ name: uname, role: 'admin', exp: Date.now() + 12*3600*1000 });
