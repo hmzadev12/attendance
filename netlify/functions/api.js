@@ -95,7 +95,7 @@ if (sig !== expected) return null;
 const payload = JSON.parse(Buffer.from(b64, ‘base64url’).toString());
 if (payload.exp && Date.now() > payload.exp) return null;
 return payload;
-} catch { return null; }
+} catch(e) { return null; }
 }
 
 // ── RATE LIMIT ────────────────────────────────────────────────────────────────
@@ -301,7 +301,7 @@ try {
 params = event.httpMethod === ‘POST’
 ? JSON.parse(event.body || ‘{}’)
 : event.queryStringParameters || {};
-} catch { return { statusCode: 400, headers, body: JSON.stringify({ error: ‘Bad request’ }) }; }
+} catch(e) { return { statusCode: 400, headers, body: JSON.stringify({ error: ‘Bad request’ }) }; }
 
 const action = String(params.action || ‘’);
 const ip = event.headers[‘x-forwarded-for’] || ‘unknown’;
