@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -301,19 +302,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 
 /* Direction-aware arrows */
-[dir="ltr"] .back-arrow { display: inline-block; transform: scaleX(-1); }
-[dir="rtl"] .back-arrow { display: inline-block; }
-[dir="ltr"] .dir-arrow { display: inline-block; transform: scaleX(-1); }
-[dir="rtl"] .dir-arrow { display: inline-block; }
-[dir="ltr"] .btn-arrow { left: auto; right: 16px; }
-[dir="rtl"] .btn-arrow { left: 16px; right: auto; }
+[dir=“ltr”] .back-arrow { display: inline-block; transform: scaleX(-1); }
+[dir=“rtl”] .back-arrow { display: inline-block; }
+[dir=“ltr”] .dir-arrow { display: inline-block; transform: scaleX(-1); }
+[dir=“rtl”] .dir-arrow { display: inline-block; }
+[dir=“ltr”] .btn-arrow { left: auto; right: 16px; }
+[dir=“rtl”] .btn-arrow { left: 16px; right: auto; }
 </style>
+
 </head>
 <body>
 <div id="flashOverlay"></div>
 
-
 <!-- LOGIN -->
+
 <div class="page active" id="page-login">
   <div class="header">
     <span data-t="appName">نظام الحضور</span>
@@ -341,6 +343,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MAIN -->
+
 <div class="page" id="page-main">
   <div class="header">
     <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><span data-t="dashboard" style="font-size:14px;">لوحة التحكم</span><span id="headerBuilding" style="font-size:10px;color:var(--text3);letter-spacing:0.5px;"></span></div>
@@ -360,6 +363,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- REGISTER EMPLOYEE -->
+
 <div class="page" id="page-register">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackReg"><span class="back-arrow">←</span></button></div>
@@ -374,6 +378,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- TICKET -->
+
 <div class="page" id="page-ticket">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackTicket"><span class="back-arrow">←</span></button></div>
@@ -395,6 +400,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- SCANNER -->
+
 <div class="page" id="page-scanner">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackScan"><span class="back-arrow">←</span></button></div>
@@ -422,6 +428,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- EMPLOYEES PAGE -->
+
 <div class="page" id="page-employees">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackEmp"><span class="back-arrow">←</span></button></div>
@@ -432,6 +439,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- ADMIN PAGE -->
+
 <div class="page" id="page-admin">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackAdmin"><span class="back-arrow">←</span></button></div>
@@ -449,6 +457,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- STATS PAGE -->
+
 <div class="page" id="page-stats">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackStats"><span class="back-arrow">←</span></button></div>
@@ -459,6 +468,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: PRESENT LIST -->
+
 <div class="modal-overlay" id="presentListModal">
   <div class="modal" style="max-height:80vh;display:flex;flex-direction:column;">
     <div class="modal-title" id="presentListTitle">الحاضرون الآن</div>
@@ -470,6 +480,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- AUDIT LOG PAGE -->
+
 <div class="page" id="page-audit">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackAudit">&#8592;</button></div>
@@ -480,6 +491,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MONTHLY REPORT PAGE -->
+
 <div class="page" id="page-monthly">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackMonthly">&#8592;</button></div>
@@ -490,6 +502,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: ADD GUARD -->
+
 <div class="modal-overlay" id="addGuardModal">
   <div class="modal">
     <div class="modal-title" data-t="addNewGuard">إضافة موظف أمن جديد</div>
@@ -507,6 +520,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: EDIT GUARD -->
+
 <div class="modal-overlay" id="editGuardModal">
   <div class="modal">
     <div class="modal-title" data-t="editGuard">تعديل موظف الأمن</div>
@@ -523,6 +537,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: EDIT EMPLOYEE -->
+
 <div class="modal-overlay" id="editEmpModal">
   <div class="modal">
     <div class="modal-title" data-t="editEmp">تعديل بيانات الموظف</div>
@@ -538,6 +553,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: DELETE -->
+
 <div class="modal-overlay" id="deleteModal">
   <div class="modal">
     <div class="modal-title" data-t="confirmDelete">⚠️ تأكيد الحذف</div>
@@ -550,6 +566,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: QR CARD -->
+
 <div class="modal-overlay" id="qrModal">
   <div class="modal">
     <div class="modal-title" data-t="empCard">بطاقة الموظف</div>
@@ -632,38 +649,38 @@ var T = {
   },
   en: {
     appName:'EXPRO', welcome:'Welcome', enterPass:'Enter your name and password to login',
-    login:'دخول', passPlaceholder:'● ● ● ● ● ●', usernamePlaceholder:'Username', wrongPass:'❌ Wrong name or password',
+    login:'Login', passPlaceholder:'● ● ● ● ● ●', usernamePlaceholder:'Username',
+    wrongPass:'❌ Wrong name or password', lockedMsg:'🔒 Too many attempts, wait 15 minutes',
     checking:'Checking...', dashboard:'Dashboard', controlPanel:'Control Panel',
     helloUser:'Hello, {name} 👋', presentNow:'Present Now', todayCheckins:'Inside Now',
-    registerEmp:'تسجيل موظف جديد', registerAndCreate:'تسجيل وإنشاء QR Code',
-    manageEmps:'إدارة الموظفين', attendanceStats:'إحصائيات الحضور',
-    manageGuards:'إدارة موظفي الأمن', logout:'⬅ تسجيل الخروج',
+    registerEmp:'Register New Employee', registerAndCreate:'Register & Create QR Code',
+    manageEmps:'Manage Employees', attendanceStats:'Attendance Statistics',
+    manageGuards:'Manage Security Staff', logout:'Logout ➡',
     fullName:'Full Name', jobTitle:'Job / Department', empNamePh:'Enter employee name',
     empJobPh:'e.g. Accountant, Engineer...', empCard:'Employee Card', issueDate:'Issue Date',
-    downloadPNG:'⬇ تنزيل البطاقة PNG', addAnotherEmp:'+ تسجيل موظف آخر',
-    checkIn:'تسجيل دخول', checkOut:'تسجيل خروج',
+    downloadPNG:'⬇ Download Card PNG', addAnotherEmp:'+ Register Another',
+    checkIn:'Check In', checkOut:'Check Out',
     scanQrIn:'Scan QR Code to check in', scanQrOut:'Scan QR Code to check out',
     tapToOpenCam:'Tap to open camera', done:'Done:', orManual:'Or enter ID manually',
-    register:'✓ تسجيل', stopAndBack:'■ إيقاف والرجوع', camStarting:'Starting camera...',
-    aimCam:'📷 Aim camera at QR Code', aimCamNext:'📷 Aim camera at next QR Code',
+    register:'✓ Register', stopAndBack:'■ Stop & Back', camStarting:'Starting camera...',
+    aimCam:'📷 Aim camera at QR Code', aimCamNext:'📷 Aim at next QR Code',
     tapOpenCam:'Tap to open camera', registering:'⏳ Registering...',
     name:'Name', password:'Password', addNewGuard:'Add New Security Guard',
-    addGuard:'إضافة موظف الأمن', currentGuards:'Current Security Staff',
+    addGuard:'Add Guard', currentGuards:'Current Security Staff',
     editGuard:'Edit Security Guard', assignedEmps:'Assigned Employees',
-    editEmp:'Edit Employee Data', cancel:'إلغاء', save:'حفظ', close:'إغلاق',
-    confirmDelete:'⚠️ Confirm Delete', delete:'حذف',
+    editEmp:'Edit Employee', cancel:'Cancel', save:'Save', close:'Close',
+    confirmDelete:'⚠️ Confirm Delete', delete:'Delete',
     registeredEmps:'👥 Registered Employees', empList:'Employee List',
-    addNewEmp:'+ إضافة موظف جديد', loading:'Loading...', noEmps:'No employees yet',
+    addNewEmp:'+ Add New Employee', loading:'Loading...', noEmps:'No employees yet',
     noGuards:'No security guards yet', noAssigned:'No employees assigned',
-    edit:'تعديل', del:'حذف', card:'📥 بطاقة', namePh:'e.g. Hassan', passPh:'e.g. 1234',
-    // stats
+    edit:'Edit', del:'Delete', card:'📥 Card', namePh:'e.g. Hassan', passPh:'e.g. 1234',
     filterTitle:'🔍 Filter Statistics', dateFrom:'From Date', dateTo:'To Date',
-    allEmps:'All Employees', searchBtn:'🔍 بحث', printBtn:'🖨️ Print',
+    allEmps:'All Employees', searchBtn:'🔍 Search', printBtn:'🖨️ Print',
     presentNowStat:'Present', leftStat:'Left', totalRecordsStat:'Records', totalHoursStat:'Total Hours',
     todayLog:'Results', noResults:'No results for selected period',
     checkInBadge:'Check In ●', checkOutBadge:'Check Out ✓',
     timeIn:'In', timeOut:'Out', hours:'Hours', by:'By',
-    savePDF:'حفظ PDF', printTitle:'Attendance Report', printRange:'Period:',
+    savePDF:'💾 Save PDF', printTitle:'Attendance Report', printRange:'Period:',
     subCreateQR:'Create QR Code card', subViewEdit:'View, edit & delete',
     subFullLog:'Full check-in/out log', subAddEdit:'Add, edit & delete',
     permissionsTitle:'🔐 Permissions',
@@ -673,14 +690,15 @@ var T = {
     orgName:'Employee Pass', empIdLabel:'Employee ID',
     validBadge:'✓ Active', deleteConfirmGuard:'Delete security guard', deleteConfirmEmp:'Delete employee',
     scanDone:'Done:', filterEmployee:'Employee',
-    presentList:'Currently Present', presentListSub:'Employees inside the site', noPresent:'Nobody is inside right now', checkinTime:'Checked in at', viewPresent:'View Present', subViewPresent:'Who is inside right now', permViewPresent:'View Present List',
-    // audit log
-    auditLog:'Audit Log', auditActor:'By', auditAction:'Action', auditDetails:'Details', auditDateTime:'Date & Time', noAudit:'No records yet',
-    // monthly report
-    monthlyReport:'Monthly Summary', monthLabel:'Month', yearLabel:'Year', workingDays:'Working Days', daysPresent:'Days Present', daysAbsent:'Days Absent', totalHoursLabel:'Total Hours', attendanceRate:'Attendance Rate', searchReport:'View Report',
-    // excel
+    presentList:'Currently Present', presentListSub:'Employees inside the site',
+    noPresent:'Nobody is inside right now', checkinTime:'Checked in at',
+    viewPresent:'View Present', subViewPresent:'Who is inside right now', permViewPresent:'View Present List',
+    auditLog:'Audit Log', auditActor:'By', auditAction:'Action', auditDetails:'Details',
+    auditDateTime:'Date & Time', noAudit:'No records yet',
+    monthlyReport:'Monthly Summary', monthLabel:'Month', yearLabel:'Year',
+    workingDays:'Working Days', daysPresent:'Days Present', daysAbsent:'Days Absent',
+    totalHoursLabel:'Total Hours', attendanceRate:'Attendance Rate', searchReport:'View Report',
     exportExcel:'⬇ Export Excel', exportingExcel:'Exporting...',
-    // buttons on main
     subAuditLog:'Latest changes & operations', subMonthly:'Monthly attendance summary',
   }
 };
@@ -690,7 +708,15 @@ function t(key){ return (T[LANG][key]||T['ar'][key]||key); }
 function applyLang(){
   // Fix logout button arrow direction
   var logoutBtn = document.getElementById('bLogout');
-  if(logoutBtn) logoutBtn.textContent = LANG==='ar' ? '⬅ تسجيل الخروج' : 'تسجيل الخروج ➡';
+  if(logoutBtn) logoutBtn.textContent = LANG==='ar' ? '⬅ ' + t('logout').replace('Logout ➡','').replace('⬅ تسجيل الخروج','تسجيل الخروج') : t('logout');
+  // Fix back arrows
+  document.querySelectorAll('.back-arrow').forEach(function(el){
+    el.textContent = LANG==='ar' ? '←' : '→';
+  });
+  // Fix action button arrows (‹ in RTL, › in LTR)
+  document.querySelectorAll('.btn-arrow.dir-arrow').forEach(function(el){
+    el.textContent = LANG==='ar' ? '‹' : '›';
+  });
   var isAr = LANG==='ar';
   document.documentElement.lang = LANG;
   document.documentElement.dir  = isAr?'rtl':'ltr';
@@ -1505,5 +1531,6 @@ applyLang();
   }catch(e){sessionStorage.removeItem('attendanceUser');}
 })();
 </script>
+
 </body>
 </html>
