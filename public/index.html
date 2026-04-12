@@ -210,7 +210,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .att-detail{font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:3px 8px;}
 .att-detail b{color:var(--text);}
 /* MODALS */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:flex-end;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:none;align-items:flex-end;}
 .modal-overlay.active{display:flex;}
 .modal{background:var(--surface);border-radius:24px 24px 0 0;padding:22px;width:100%;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border);}
 .modal-title{font-size:17px;font-weight:700;margin-bottom:14px;}
@@ -734,8 +734,9 @@ function openPresentList(){
     titleEl.textContent=t('presentList')+' ('+list.length+')';
     var html='';
     list.forEach(function(emp){
-      var initials=(emp.name||'?').trim().split(' ').filter(Boolean).map(function(w){return w[0];}).slice(0,2).join('');
-      html+='<div class="present-item"><div class="present-avatar">'+initials+'</div><div style="flex:1;"><div class="present-name">'+emp.name+'</div><div class="present-time">'+t('checkinTime')+' '+emp.timeIn+'</div></div><div class="present-live"></div></div>';
+      var ename=emp.empName||emp.name||'?';
+      var initials=ename.trim().split(' ').filter(Boolean).map(function(w){return w[0];}).slice(0,2).join('');
+      html+='<div class="present-item"><div class="present-avatar">'+initials+'</div><div style="flex:1;"><div class="present-name">'+ename+'</div><div class="present-time">'+t('checkinTime')+': '+emp.timeIn+'</div></div><div class="present-live"></div></div>';
     });
     body.innerHTML=html;
   }).catch(function(){
@@ -910,10 +911,14 @@ async function callAPI(params){
   if(!text)throw new Error('Empty response');
   var data;try{data=JSON.parse(text);}catch(e){throw new Error('Response error');}
   if(data.error){
-    if(res.status===401 || res.status===403){
+    if(res.status===401){
       currentUser=null;AUTH_TOKEN='';sessionStorage.clear();
+      localStorage.removeItem('exproSysVer');
       goToPage('page-login');
       throw new Error('انتهت الجلسة — يرجى تسجيل الدخول');
+    }
+    if(res.status===403){
+      throw new Error('غير مصرح بهذه العملية');
     }
     throw new Error(data.error);
   }
@@ -1059,7 +1064,7 @@ function loadEmployees(){
       allEmployees.forEach(function(emp){
         var card=document.createElement('div');card.className='card';
         card.innerHTML='<div class="card-top"><div><div class="card-name">👤 '+emp.name+'</div><div class="card-sub">'+emp.job+' · <span style="font-family:var(--mono);font-size:11px;">'+emp.id+'</span></div></div><div class="card-actions"><button class="card-qr-btn">'+t('card')+'</button><button class="card-edit-btn">'+t('edit')+'</button><button class="card-del-btn">'+t('del')+'</button></div></div>';
-        card.querySelector('.card-qr-btn').onclick=function(){openQrModal(emp);};
+        card.querySelector('.card-qr-btn').addEventListener('click',function(e){e.stopPropagation();e.preventDefault();openQrModal(emp);});
         card.querySelector('.card-edit-btn').onclick=function(){openEditEmp(emp);};
         card.querySelector('.card-del-btn').onclick=function(){openDeleteConfirm(t('deleteConfirmEmp')+' "'+emp.name+'"?',function(){deleteEmployeeRow(emp.rowNum);});};
         list.appendChild(card);
@@ -1526,18 +1531,19 @@ applyLang();
   try{
     var saved=sessionStorage.getItem('attendanceUser');
     var savedTok=sessionStorage.getItem('exproToken');
-    if(saved&&savedTok){
+    var sysVer=localStorage.getItem('exproSysVer');
+    // If system version changed, force re-login to get new token
+    if(sysVer!=='v4'){
+      sessionStorage.clear();
+      localStorage.setItem('exproSysVer','v4');
+    } else if(saved&&savedTok){
       currentUser=JSON.parse(saved);
       AUTH_TOKEN=savedTok;
       setupMainPage();
       goToPage('page-main');
-    } else {
-      sessionStorage.removeItem('attendanceUser');
-      sessionStorage.removeItem('exproToken');
     }
   }catch(e){
-    sessionStorage.removeItem('attendanceUser');
-    sessionStorage.removeItem('exproToken');
+    sessionStorage.clear();
   }
 })();
 </script>
