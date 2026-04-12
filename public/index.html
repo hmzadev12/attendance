@@ -299,6 +299,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .print-footer{margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex!important;justify-content:space-between;font-size:10px;color:#94a3b8;}
   .att-log,.section-title{display:none!important;}
 }
+
+/* Direction-aware arrows */
+[dir="ltr"] .back-arrow { display: inline-block; transform: scaleX(-1); }
+[dir="rtl"] .back-arrow { display: inline-block; }
+[dir="ltr"] .dir-arrow { display: inline-block; transform: scaleX(-1); }
+[dir="rtl"] .dir-arrow { display: inline-block; }
+[dir="ltr"] .btn-arrow { left: auto; right: 16px; }
+[dir="rtl"] .btn-arrow { left: 16px; right: auto; }
 </style>
 </head>
 <body>
@@ -354,7 +362,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <!-- REGISTER EMPLOYEE -->
 <div class="page" id="page-register">
   <div class="header">
-    <div class="header-right"><button class="back-btn" id="bBackReg">←</button></div>
+    <div class="header-right"><button class="back-btn" id="bBackReg"><span class="back-arrow">←</span></button></div>
     <span data-t="registerEmp">تسجيل موظف جديد</span>
     <button class="lang-btn" id="regLangBtn">EN</button>
   </div>
@@ -368,7 +376,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <!-- TICKET -->
 <div class="page" id="page-ticket">
   <div class="header">
-    <div class="header-right"><button class="back-btn" id="bBackTicket">←</button></div>
+    <div class="header-right"><button class="back-btn" id="bBackTicket"><span class="back-arrow">←</span></button></div>
     <span data-t="empCard">بطاقة الموظف</span>
     <button class="lang-btn" id="ticketLangBtn">EN</button>
   </div>
@@ -389,7 +397,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <!-- SCANNER -->
 <div class="page" id="page-scanner">
   <div class="header">
-    <div class="header-right"><button class="back-btn" id="bBackScan">←</button></div>
+    <div class="header-right"><button class="back-btn" id="bBackScan"><span class="back-arrow">←</span></button></div>
     <span id="scannerTitle"></span>
     <button class="lang-btn" id="scanLangBtn">EN</button>
   </div>
@@ -416,7 +424,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <!-- EMPLOYEES PAGE -->
 <div class="page" id="page-employees">
   <div class="header">
-    <div class="header-right"><button class="back-btn" id="bBackEmp">←</button></div>
+    <div class="header-right"><button class="back-btn" id="bBackEmp"><span class="back-arrow">←</span></button></div>
     <span data-t="manageEmps">إدارة الموظفين</span>
     <button class="lang-btn" id="empLangBtn">EN</button>
   </div>
@@ -426,7 +434,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <!-- ADMIN PAGE -->
 <div class="page" id="page-admin">
   <div class="header">
-    <div class="header-right"><button class="back-btn" id="bBackAdmin">←</button></div>
+    <div class="header-right"><button class="back-btn" id="bBackAdmin"><span class="back-arrow">←</span></button></div>
     <span data-t="manageGuards">إدارة موظفي الأمن</span>
     <button class="lang-btn" id="adminLangBtn">EN</button>
   </div>
@@ -443,7 +451,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <!-- STATS PAGE -->
 <div class="page" id="page-stats">
   <div class="header">
-    <div class="header-right"><button class="back-btn" id="bBackStats">←</button></div>
+    <div class="header-right"><button class="back-btn" id="bBackStats"><span class="back-arrow">←</span></button></div>
     <span data-t="attendanceStats">إحصائيات الحضور</span>
     <button class="lang-btn" id="statsLangBtn">EN</button>
   </div>
@@ -680,6 +688,9 @@ var T = {
 function t(key){ return (T[LANG][key]||T['ar'][key]||key); }
 
 function applyLang(){
+  // Fix logout button arrow direction
+  var logoutBtn = document.getElementById('bLogout');
+  if(logoutBtn) logoutBtn.textContent = LANG==='ar' ? '⬅ تسجيل الخروج' : 'تسجيل الخروج ➡';
   var isAr = LANG==='ar';
   document.documentElement.lang = LANG;
   document.documentElement.dir  = isAr?'rtl':'ltr';
@@ -932,7 +943,7 @@ function doLogin(){
         sessionStorage.setItem('exproToken',result.token);
       }
       sessionStorage.setItem('attendanceUser',JSON.stringify(currentUser));beep(true);flash(true);document.getElementById('loginPassword').value='';document.getElementById('loginUsername').value='';setupMainPage();goToPage('page-main');}
-    else{beep(false);flash(false);errEl.textContent=t('wrongPass');}
+    else if(result&&result.locked){beep(false);flash(false);errEl.textContent=t('lockedMsg');}else{beep(false);flash(false);errEl.textContent=t('wrongPass');}
   }).catch(function(e){btn.textContent=t('login');btn.disabled=false;errEl.textContent='❌ '+e.message;});
 }
 
@@ -947,13 +958,13 @@ function setupMainPage(){
   if(currentUser.role==='admin'){
     statsRow.innerHTML='<div class="stat-card green full" style="cursor:pointer;" onclick="openPresentList()"><div class="stat-dot"></div><div class="stat-num" id="checkinsCount">—</div><div class="stat-label">'+t('presentNow')+'</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">'+t('presentListSub')+' ↓</div></div>';
     actions.innerHTML=
-      '<button class="action-btn btn-reg" id="b1"><div class="btn-icon">📋</div><div class="btn-text"><span class="btn-main-text">'+t('registerEmp')+'</span><span class="btn-sub-text">'+t('subCreateQR')+'</span></div><span class="btn-arrow">‹</span></button>'+
-      '<button class="action-btn btn-employees" id="b5"><div class="btn-icon">👥</div><div class="btn-text"><span class="btn-main-text">'+t('manageEmps')+'</span><span class="btn-sub-text">'+t('subViewEdit')+'</span></div><span class="btn-arrow">‹</span></button>'+
-      '<button class="action-btn btn-stats" id="b6"><div class="btn-icon">📊</div><div class="btn-text"><span class="btn-main-text">'+t('attendanceStats')+'</span><span class="btn-sub-text">'+t('subFullLog')+'</span></div><span class="btn-arrow">‹</span></button>'+
-      '<button class="action-btn btn-admin" id="b4"><div class="btn-icon">⚙️</div><div class="btn-text"><span class="btn-main-text">'+t('manageGuards')+'</span><span class="btn-sub-text">'+t('subAddEdit')+'</span></div><span class="btn-arrow">‹</span></button>'+
-      '<button class="action-btn" style="border-color:rgba(6,182,212,0.2);" id="b7"><div class="btn-icon" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);">📅</div><div class="btn-text"><span class="btn-main-text">'+t('monthlyReport')+'</span><span class="btn-sub-text">'+t('subMonthly')+'</span></div><span class="btn-arrow">‹</span></button>'+
-      '<button class="action-btn" style="border-color:rgba(139,92,246,0.2);" id="b8"><div class="btn-icon" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">📋</div><div class="btn-text"><span class="btn-main-text">'+t('auditLog')+'</span><span class="btn-sub-text">'+t('subAuditLog')+'</span></div><span class="btn-arrow">‹</span></button>'+
-      '<button class="action-btn" style="border-color:rgba(16,185,129,0.2);" id="b9"><div class="btn-icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);">🟢</div><div class="btn-text"><span class="btn-main-text">'+t('viewPresent')+'</span><span class="btn-sub-text">'+t('subViewPresent')+'</span></div><span class="btn-arrow">‹</span></button>';
+      '<button class="action-btn btn-reg" id="b1"><div class="btn-icon">📋</div><div class="btn-text"><span class="btn-main-text">'+t('registerEmp')+'</span><span class="btn-sub-text">'+t('subCreateQR')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>'+
+      '<button class="action-btn btn-employees" id="b5"><div class="btn-icon">👥</div><div class="btn-text"><span class="btn-main-text">'+t('manageEmps')+'</span><span class="btn-sub-text">'+t('subViewEdit')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>'+
+      '<button class="action-btn btn-stats" id="b6"><div class="btn-icon">📊</div><div class="btn-text"><span class="btn-main-text">'+t('attendanceStats')+'</span><span class="btn-sub-text">'+t('subFullLog')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>'+
+      '<button class="action-btn btn-admin" id="b4"><div class="btn-icon">⚙️</div><div class="btn-text"><span class="btn-main-text">'+t('manageGuards')+'</span><span class="btn-sub-text">'+t('subAddEdit')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>'+
+      '<button class="action-btn" style="border-color:rgba(6,182,212,0.2);" id="b7"><div class="btn-icon" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);">📅</div><div class="btn-text"><span class="btn-main-text">'+t('monthlyReport')+'</span><span class="btn-sub-text">'+t('subMonthly')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>'+
+      '<button class="action-btn" style="border-color:rgba(139,92,246,0.2);" id="b8"><div class="btn-icon" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">📋</div><div class="btn-text"><span class="btn-main-text">'+t('auditLog')+'</span><span class="btn-sub-text">'+t('subAuditLog')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>'+
+      '<button class="action-btn" style="border-color:rgba(16,185,129,0.2);" id="b9"><div class="btn-icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);">🟢</div><div class="btn-text"><span class="btn-main-text">'+t('viewPresent')+'</span><span class="btn-sub-text">'+t('subViewPresent')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>';
     tap('b1',function(){goToPage('page-register');});
     tap('b5',function(){openEmployeesPage();});
     tap('b6',function(){openStatsPage();});
@@ -969,12 +980,12 @@ function setupMainPage(){
     var statClick=gPerms.canViewPresent?' style="cursor:pointer;" onclick="openPresentList()"':'';
     var statHint=gPerms.canViewPresent?'<div style="font-size:11px;color:var(--text3);margin-top:4px;">'+t('presentListSub')+' ↓</div>':'';
     statsRow.innerHTML='<div class="stat-card green full"'+statClick+'><div class="stat-dot"></div><div class="stat-num" id="checkinsCount">—</div><div class="stat-label">'+t('todayCheckins')+'</div>'+statHint+'</div>';
-    if(gPerms.canCheckin)      btns+='<button class="action-btn btn-checkin" id="gbCheckin"><div class="btn-icon">✅</div><div class="btn-text"><span class="btn-main-text">'+t('checkIn')+'</span><span class="btn-sub-text">'+t('scanQrIn')+'</span></div><span class="btn-arrow">‹</span></button>';
-    if(gPerms.canCheckout)     btns+='<button class="action-btn btn-checkout" id="gbCheckout"><div class="btn-icon">🚪</div><div class="btn-text"><span class="btn-main-text">'+t('checkOut')+'</span><span class="btn-sub-text">'+t('scanQrOut')+'</span></div><span class="btn-arrow">‹</span></button>';
-    if(gPerms.canRegisterEmp)  btns+='<button class="action-btn btn-reg" id="gbRegEmp"><div class="btn-icon">📋</div><div class="btn-text"><span class="btn-main-text">'+t('registerEmp')+'</span><span class="btn-sub-text">'+t('subCreateQR')+'</span></div><span class="btn-arrow">‹</span></button>';
-    if(gPerms.canManageEmps)   btns+='<button class="action-btn btn-employees" id="gbManageEmps"><div class="btn-icon">👥</div><div class="btn-text"><span class="btn-main-text">'+t('manageEmps')+'</span><span class="btn-sub-text">'+t('subViewEdit')+'</span></div><span class="btn-arrow">‹</span></button>';
-    if(gPerms.canStats)        btns+='<button class="action-btn btn-stats" id="gbStats"><div class="btn-icon">📊</div><div class="btn-text"><span class="btn-main-text">'+t('attendanceStats')+'</span><span class="btn-sub-text">'+t('subFullLog')+'</span></div><span class="btn-arrow">‹</span></button>';
-    if(gPerms.canManageGuards) btns+='<button class="action-btn btn-admin" id="gbGuards"><div class="btn-icon">⚙️</div><div class="btn-text"><span class="btn-main-text">'+t('manageGuards')+'</span><span class="btn-sub-text">'+t('subAddEdit')+'</span></div><span class="btn-arrow">‹</span></button>';
+    if(gPerms.canCheckin)      btns+='<button class="action-btn btn-checkin" id="gbCheckin"><div class="btn-icon">✅</div><div class="btn-text"><span class="btn-main-text">'+t('checkIn')+'</span><span class="btn-sub-text">'+t('scanQrIn')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>';
+    if(gPerms.canCheckout)     btns+='<button class="action-btn btn-checkout" id="gbCheckout"><div class="btn-icon">🚪</div><div class="btn-text"><span class="btn-main-text">'+t('checkOut')+'</span><span class="btn-sub-text">'+t('scanQrOut')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>';
+    if(gPerms.canRegisterEmp)  btns+='<button class="action-btn btn-reg" id="gbRegEmp"><div class="btn-icon">📋</div><div class="btn-text"><span class="btn-main-text">'+t('registerEmp')+'</span><span class="btn-sub-text">'+t('subCreateQR')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>';
+    if(gPerms.canManageEmps)   btns+='<button class="action-btn btn-employees" id="gbManageEmps"><div class="btn-icon">👥</div><div class="btn-text"><span class="btn-main-text">'+t('manageEmps')+'</span><span class="btn-sub-text">'+t('subViewEdit')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>';
+    if(gPerms.canStats)        btns+='<button class="action-btn btn-stats" id="gbStats"><div class="btn-icon">📊</div><div class="btn-text"><span class="btn-main-text">'+t('attendanceStats')+'</span><span class="btn-sub-text">'+t('subFullLog')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>';
+    if(gPerms.canManageGuards) btns+='<button class="action-btn btn-admin" id="gbGuards"><div class="btn-icon">⚙️</div><div class="btn-text"><span class="btn-main-text">'+t('manageGuards')+'</span><span class="btn-sub-text">'+t('subAddEdit')+'</span></div><span class="btn-arrow dir-arrow">‹</span></button>';
     actions.innerHTML=btns;
     if(gPerms.canCheckin)      tap('gbCheckin',function(){openScanner('in');});
     if(gPerms.canCheckout)     tap('gbCheckout',function(){openScanner('out');});
