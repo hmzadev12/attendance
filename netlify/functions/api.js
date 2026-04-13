@@ -76,6 +76,13 @@ function nowTZ(){
   return{date:n.toLocaleDateString("en-CA",{timeZone:TIMEZONE}),time:n.toLocaleTimeString("en-US",{timeZone:TIMEZONE,hour12:true})};
 }
 
+
+async function logAction(gt,actor,action,details){
+  try{
+    var dt=new Date().toLocaleString("en-CA",{timeZone:TIMEZONE,hour12:false});
+    await sAdd(gt,"AuditLog!A:D",[[dt,actor||"-",action||"-",details||"-"]]);
+  }catch(e){}
+}
 function defP(){return{canCheckin:true,canCheckout:true,canRegisterEmp:false,canManageEmps:false,canStats:false,canManageGuards:false,canViewPresent:false};}
 
 async function doLogin(gt,user,pass,ip){
@@ -109,14 +116,15 @@ async function getEmps(gt){
   return list;
 }
 
-async function addEmp(gt,name,job){
+async function addEmp(gt,name,job,actor){
   var id="EMP-"+Math.random().toString(36).substr(2,10).toUpperCase();
   await sAdd(gt,"Employees!A:D",[[name,job,id,id]]);
+  await logAction(gt,actor,"add_emp",name+" - "+id);
   return id;
 }
 
-async function editEmp(gt,row,name,job){await sSet(gt,"Employees!A"+row+":B"+row,[[name,job]]);return{success:true};}
-async function rmEmp(gt,row){await sDel(gt,"Employees!A"+row+":D"+row);return{success:true};}
+async function editEmp(gt,row,name,job,actor){await sSet(gt,"Employees!A"+row+":B"+row,[[name,job]]);await logAction(gt,actor,"edit_emp",name);return{success:true};}
+async function rmEmp(gt,row,actor){await sDel(gt,"Employees!A"+row+":D"+row);await logAction(gt,actor,"del_emp","row:"+row);return{success:true};}
 
 async function getGuards(gt){
   var rows=await sGet(gt,"Users!A:F"),list=[];
@@ -131,24 +139,27 @@ async function getGuards(gt){
   return list;
 }
 
-async function addGuard(gt,user,pass,perms){
+async function addGuard(gt,user,pass,perms,actor){
   var rows=await sGet(gt,"Users!B:B");
   for(var i=1;i<rows.length;i++){
     if(rows[i]&&String(rows[i][0]||"").trim().toLowerCase()===String(user).trim().toLowerCase())return{success:false,error:"exists"};
   }
   await sAdd(gt,"Users!A:F",[["",user,pass,"guard","",JSON.stringify(perms||defP())]]);
+  await logAction(gt,actor,"add_guard",user);
   return{success:true};
 }
 
-async function editGuard(gt,row,user,pass,perms){
+async function editGuard(gt,row,user,pass,perms,actor){
   await sSet(gt,"Users!B"+row+":F"+row,[[user,pass,"guard","",JSON.stringify(perms||defP())]]);
+  await logAction(gt,actor,"edit_guard",user);
   return{success:true};
 }
 
-async function rmGuard(gt,row){
+async function rmGuard(gt,row,actor){
   var rows=await sGet(gt,"Users!D"+row+":D"+row);
   if(rows[0]&&String(rows[0][0]||"").toLowerCase()==="admin")return{success:false,error:"no"};
   await sDel(gt,"Users!A"+row+":F"+row);
+  await logAction(gt,actor,"del_guard","row:"+row);
   return{success:true};
 }
 
@@ -302,18 +313,19 @@ exports.handler=async function(event){
     }
     var tok=p.token||(event.headers["authorization"]||"").replace("Bearer ","");
     var user=chkTok(tok);
+    var actor=user?user.name:"system";
     if(!user)return{statusCode:401,headers:h,body:JSON.stringify({error:"session_expired"})};
     var AO=["addGuard","editGuard","deleteGuard","getGuards"];
     if(AO.indexOf(action)!==-1&&user.role!=="admin")return{statusCode:403,headers:h,body:JSON.stringify({error:"forbidden"})};
     var gt2=await getGT(),r2;
     if(action==="getEmployees")r2=await getEmps(gt2);
-    else if(action==="registerEmployee")r2=await addEmp(gt2,p.name,p.job);
-    else if(action==="editEmployee")r2=await editEmp(gt2,p.rowNum,p.name,p.job);
-    else if(action==="deleteEmployee")r2=await rmEmp(gt2,p.rowNum);
+    else if(action==="registerEmployee")r2=await addEmp(gt2,p.name,p.job,actor);
+    else if(action==="editEmployee")r2=await editEmp(gt2,p.rowNum,p.name,p.job,actor);
+    else if(action==="deleteEmployee")r2=await rmEmp(gt2,p.rowNum,actor);
     else if(action==="getGuards")r2=await getGuards(gt2);
-    else if(action==="addGuard")r2=await addGuard(gt2,p.username,p.password,p.permissions);
-    else if(action==="editGuard")r2=await editGuard(gt2,p.rowNum,p.username,p.password,p.permissions);
-    else if(action==="deleteGuard")r2=await rmGuard(gt2,p.rowNum);
+    else if(action==="addGuard")r2=await addGuard(gt2,p.username,p.password,p.permissions,actor);
+    else if(action==="editGuard")r2=await editGuard(gt2,p.rowNum,p.username,p.password,p.permissions,actor);
+    else if(action==="deleteGuard")r2=await rmGuard(gt2,p.rowNum,actor);
     else if(action==="registerAttendance")r2=await regAtt(gt2,p.qrCode,p.mode,p.scannedBy);
     else if(action==="currentPresent")r2=await curPresent(gt2);
     else if(action==="getAttendanceStats")r2=await getStats(gt2,p.dateFrom,p.dateTo,p.empId);
