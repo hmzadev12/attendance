@@ -24,7 +24,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .page{display:none;min-height:100vh;flex-direction:column;}
 .page.active{display:flex;}
 /* HEADER */
-.header{background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);color:var(--text);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:600;flex-shrink:0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;gap:8px;}
+.header{background:rgba(255,255,255,0.99);color:var(--text);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:600;flex-shrink:0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;gap:8px;}
 .header-right{display:flex;align-items:center;gap:8px;}
 .back-btn{cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-family:var(--font);font-size:14px;white-space:nowrap;}
 .lang-btn{cursor:pointer;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:var(--accent);padding:7px 12px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;white-space:nowrap;letter-spacing:0.5px;}
@@ -210,7 +210,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .att-detail{font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:3px 8px;}
 .att-detail b{color:var(--text);}
 /* MODALS */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:none;align-items:flex-end;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:none;align-items:flex-end;-webkit-transform:translateZ(0);transform:translateZ(0);}
 .modal-overlay.active{display:flex;}
 .modal{background:var(--surface);border-radius:24px 24px 0 0;padding:22px;width:100%;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border);}
 .modal-title{font-size:17px;font-weight:700;margin-bottom:14px;}
@@ -456,6 +456,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <button class="lang-btn" id="statsLangBtn">EN</button>
   </div>
   <div class="page-body" id="statsBody"></div>
+</div>
+
+<!-- QR CARD PAGE -->
+<div class="page" id="page-qrcard">
+  <div class="header">
+    <div class="header-right"><button class="back-btn" id="bBackQrCard"><span class="back-arrow">←</span></button></div>
+    <span data-t="empCard">بطاقة الموظف</span>
+    <button class="lang-btn" id="qrCardLangBtn">EN</button>
+  </div>
+  <div style="padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:18px;overflow-y:auto;flex:1;">
+    <div id="qrCardContent" style="background:white;border-radius:18px;border:2.5px solid #1a9bb5;box-shadow:0 4px 20px rgba(0,0,0,0.15);width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;padding:22px 18px 18px;">
+    </div>
+    <button class="submit-btn green" id="bDownloadQrCard" data-t="downloadPNG" style="width:100%;max-width:300px;">⬇ تنزيل PNG</button>
+  </div>
 </div>
 
 <!-- MODAL: PRESENT LIST -->
@@ -872,6 +886,7 @@ function refreshCurrentPage(){
   if(currentPage==='page-employees'){ loadEmployees(); return; }
   if(currentPage==='page-admin')   { loadGuards(); return; }
   if(currentPage==='page-stats')   { renderStatsPage(); return; }
+  if(currentPage==='page-qrcard')  { return; }
   if(currentPage==='page-audit')   { openAuditPage(); return; }
   if(currentPage==='page-monthly') { openMonthlyPage(); return; }
 }
@@ -1075,23 +1090,31 @@ function loadEmployees(){
 }
 
 function openQrModal(emp){
-  document.getElementById('qrModalName').textContent=emp.name;
-  document.getElementById('qrModalJob').textContent=emp.job;
-  document.getElementById('qrModalId').textContent=emp.id;
-  var d=new Date();
-  document.getElementById('qrModalDate').textContent=d.toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
-  var w=document.getElementById('qrModalCanvas');
-  w.innerHTML='';
+  var content=document.getElementById('qrCardContent');
+  var d=new Date().toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
+  content.innerHTML=
+    '<div style="text-align:center;margin-bottom:12px;">'+
+    '<div style="font-size:20px;font-weight:800;color:#0f172a;">'+emp.name+'</div>'+
+    '<div style="font-size:13px;color:#64748b;margin-top:4px;">'+emp.job+'</div>'+
+    '</div>'+
+    '<div id="qrCardQR" style="background:white;border-radius:10px;padding:10px;border:1px solid #e2e8f0;"></div>'+
+    '<div style="margin-top:12px;text-align:center;">'+
+    '<div style="font-size:10px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Employee ID</div>'+
+    '<div style="font-size:13px;font-weight:700;font-family:monospace;color:#1a9bb5;letter-spacing:1px;">'+emp.id+'</div>'+
+    '</div>'+
+    '<div style="margin-top:10px;font-size:10px;color:#94a3b8;">'+d+'</div>';
   setTimeout(function(){
+    var qrEl=document.getElementById('qrCardQR');
+    if(!qrEl)return;
     try{
-      new QRCode(w,{text:emp.id,width:148,height:148,colorDark:'#0f172a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+      new QRCode(qrEl,{text:emp.id,width:180,height:180,colorDark:'#0f172a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
     }catch(e){
-      w.innerHTML='<div style="padding:10px;font-family:monospace;font-size:11px;color:#333;">'+emp.id+'</div>';
+      qrEl.innerHTML='<div style="padding:10px;font-family:monospace;font-size:11px;color:#333;">'+emp.id+'</div>';
     }
-  },50);
-  var modal=document.getElementById('qrModal');
-  modal.classList.add('active');
-  modal.style.display='flex';
+  },100);
+  // Store emp for download
+  window._qrCardEmp=emp;
+  goToPage('page-qrcard');
 }
 
 function openEditEmp(emp){
@@ -1495,6 +1518,15 @@ tap('bAddGuardSave',addGuard);
 tap('bEditGuardCancel',function(){document.getElementById('editGuardModal').classList.remove('active');});
 tap('bEditGuardSave',saveEditGuard);
 tap('bBackEmp',function(){goToPage('page-main');});
+tap('bBackQrCard',function(){goToPage('page-employees');});
+tap('bDownloadQrCard',function(){
+  if(typeof html2canvas==='undefined'||!window._qrCardEmp)return;
+  html2canvas(document.getElementById('qrCardContent'),{scale:3,useCORS:true,backgroundColor:'#ffffff'}).then(function(c){
+    var a=document.createElement('a');
+    a.download=window._qrCardEmp.id+'-'+window._qrCardEmp.name+'.png';
+    a.href=c.toDataURL('image/png');a.click();
+  });
+});
 tap('bEditEmpCancel',function(){document.getElementById('editEmpModal').classList.remove('active');});
 tap('bEditEmpSave',saveEditEmp);
 tap('bDeleteCancel',function(){document.getElementById('deleteModal').classList.remove('active');deleteCallback=null;});
@@ -1513,7 +1545,7 @@ tap('bQrModalDownload',function(){
 });
 
 // Lang buttons (all pages)
-['globalLangBtn','mainLangBtn','regLangBtn','ticketLangBtn','scanLangBtn','empLangBtn','adminLangBtn','statsLangBtn'].forEach(function(id){
+['globalLangBtn','mainLangBtn','qrCardLangBtn','regLangBtn','ticketLangBtn','scanLangBtn','empLangBtn','adminLangBtn','statsLangBtn'].forEach(function(id){
   tap(id,toggleLang);
 });
 
