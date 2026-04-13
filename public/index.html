@@ -895,7 +895,7 @@ function toggleLang(){
 // ===================== CORE =====================
 var currentPage='page-login', currentUser=null;AUTH_TOKEN='';sessionStorage.clear();
 var scanMode='in', scanCooldown=false, cooldownTimer=null;
-var COOLDOWN_MS=800, sessionCount=0, lastCode='', lastCodeTime=0;
+var COOLDOWN_MS=3000, sessionCount=0, lastCode='', lastCodeTime=0, scannedCodes={};
 var camStream=null, camRunning=false, rafId=null;
 var allEmployees=[], editingGuardData=null, editingEmpData=null;
 var deleteCallback=null, selectedEmpIds=[];
@@ -1386,7 +1386,7 @@ function openDeleteConfirm(msg,callback){
 
 // ===================== SCANNER =====================
 function openScanner(mode){
-  scanMode=mode;sessionCount=0;lastCode='';lastCodeTime=0;
+  scanMode=mode;sessionCount=0;lastCode='';lastCodeTime=0;scannedCodes={};
   document.getElementById('scanCountDisplay').textContent='0';
   var badge=document.getElementById('scannerModeBadge'),title=document.getElementById('scannerTitle');
   if(mode==='in'){badge.textContent='CHECK-IN';badge.className='scanner-mode-badge mode-in';title.textContent=t('checkIn');}
@@ -1431,13 +1431,27 @@ function showResult(ok,icon,msg){var el=document.getElementById('scanResult');do
 function hideResult(){document.getElementById('scanResult').className='';}
 function onScan(code){
   try{
-    if(!code)return;var now=Date.now();
-    if(code===lastCode&&(now-lastCodeTime)<2000)return;
+    if(!code)return;
+    var now=Date.now();
+    // Block same QR within 30 seconds
+    if(scannedCodes[code]&&(now-scannedCodes[code])<30000)return;
+    // Block any scan during cooldown
     if(scanCooldown)return;
+    // Block same QR within 3 seconds regardless
+    if(code===lastCode&&(now-lastCodeTime)<3000)return;
     scanCooldown=true;lastCode=code;lastCodeTime=now;
-    flash(true);beep(true);showResult(true,'⏳',t('registering'));setCamStatus('⏳ '+code.substring(0,20)+'...','');
+    flash(true);beep(true);
+    showResult(true,'⏳',t('registering'));
+    setCamStatus('⏳ '+code.substring(0,20)+'...','');
     if(cooldownTimer)clearTimeout(cooldownTimer);
-    callAPI({action:'registerAttendance',qrCode:code,mode:scanMode,scannedBy:currentUser?currentUser.name:'',assignedIds:[]}).then(handleResult).catch(function(err){
+    callAPI({action:'registerAttendance',qrCode:code,mode:scanMode,scannedBy:currentUser?currentUser.name:'',assignedIds:[]}).then(function(res){
+      var ok=res&&(res.includes('OK_IN:')||res.includes('OK_OUT:')||res.includes('✔'));
+      if(ok){
+        // After success, block this QR for 30 seconds
+        scannedCodes[code]=Date.now();
+      }
+      handleResult(res);
+    }).catch(function(err){
       showResult(false,'❌',err.message);setCamStatus('Error: '+err.message,'error');flash(false);beep(false);
       cooldownTimer=setTimeout(function(){scanCooldown=false;hideResult();setCamStatus(t('aimCam'),'');},1200);
     });
