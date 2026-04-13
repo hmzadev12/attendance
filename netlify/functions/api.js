@@ -180,12 +180,12 @@ async function regAtt(gt,qr,mode,by){
     if(ar[j][0]===dt&&ar[j][1]===emp.id){li=j+1;lr=ar[j];cnt++;}
   }
   if(mode==="in"){
-    if(lr&&!lr[4])return"WARN:already in";
+    if(lr&&(!lr[4]||lr[4]==="-"))return"WARN:already in";
     await sAdd(gt,"Attendance!A:H",[[dt,emp.id,emp.name,tm,"-","-",cnt+1,by||"-"]]);
     return"OK_IN:"+emp.name;
   }
   if(mode==="out"){
-    if(li===-1||(lr&&lr[4]))return"WARN:no open";
+    if(li===-1||(lr&&lr[4]&&lr[4]!=="-"))return"WARN:no open";
     var diff=pT(tm)-pT(lr[3]);
     if(diff<0)diff+=86400;
     var hrs=(diff/3600).toFixed(2);
