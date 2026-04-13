@@ -250,6 +250,13 @@ async function getMonthlyReport(gt,month,year){
   var m=String(month).padStart(2,"0");
   var y=String(year);
   var prefix=y+"-"+m;
+  // Calculate working days in month
+  var daysInMonth=new Date(parseInt(y),parseInt(month),0).getDate();
+  var workingDays=0;
+  for(var d=1;d<=daysInMonth;d++){
+    var day=new Date(parseInt(y),parseInt(month)-1,d).getDay();
+    if(day!==5&&day!==6)workingDays++;
+  }
   var byEmp={};
   for(var j=1;j<rows.length;j++){
     if(!rows[j]||!rows[j][0])continue;
@@ -257,15 +264,28 @@ async function getMonthlyReport(gt,month,year){
     var eid=rows[j][1];
     if(!byEmp[eid])byEmp[eid]={empId:eid,empName:rows[j][2],days:{},totalHours:0};
     byEmp[eid].days[rows[j][0]]=true;
-    byEmp[eid].totalHours+=parseFloat(rows[j][5])||0;
+    var h=rows[j][5]||"";
+    if(h&&h!=="-")byEmp[eid].totalHours+=parseFloat(h)||0;
   }
-  var result=[];
+  var report=[];
   var eids=Object.keys(byEmp);
   for(var k=0;k<eids.length;k++){
     var e=byEmp[eids[k]];
-    result.push({empId:e.empId,empName:e.empName,daysPresent:Object.keys(e.days).length,totalHours:e.totalHours.toFixed(2)});
+    var emp=emps[e.empId]||{name:e.empName,job:"-"};
+    var dp=Object.keys(e.days).length;
+    var da=workingDays>dp?workingDays-dp:0;
+    var rate=workingDays>0?Math.round((dp/workingDays)*100):0;
+    report.push({
+      empId:e.empId,
+      name:emp.name,
+      job:emp.job,
+      daysPresent:dp,
+      daysAbsent:da,
+      totalHours:e.totalHours.toFixed(2),
+      attendanceRate:rate
+    });
   }
-  return result;
+  return{month:month,year:year,workingDays:workingDays,report:report};
 }
 exports.handler=async function(event){
   var h={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"Content-Type,Authorization","Content-Type":"application/json"};
