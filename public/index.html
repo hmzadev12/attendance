@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -210,7 +211,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .att-detail{font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:3px 8px;}
 .att-detail b{color:var(--text);}
 /* MODALS */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:none;align-items:flex-end;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:none;align-items:flex-end;}
 .modal-overlay.active{display:flex;}
 .modal{background:var(--surface);border-radius:24px 24px 0 0;padding:22px;width:100%;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border);}
 .modal-title{font-size:17px;font-weight:700;margin-bottom:14px;}
@@ -301,19 +302,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 
 /* Direction-aware arrows */
-[dir="ltr"] .back-arrow { display: inline-block; transform: scaleX(-1); }
-[dir="rtl"] .back-arrow { display: inline-block; }
-[dir="ltr"] .dir-arrow { display: inline-block; transform: scaleX(-1); }
-[dir="rtl"] .dir-arrow { display: inline-block; }
-[dir="ltr"] .btn-arrow { left: auto; right: 16px; }
-[dir="rtl"] .btn-arrow { left: 16px; right: auto; }
+[dir=“ltr”] .back-arrow { display: inline-block; transform: scaleX(-1); }
+[dir=“rtl”] .back-arrow { display: inline-block; }
+[dir=“ltr”] .dir-arrow { display: inline-block; transform: scaleX(-1); }
+[dir=“rtl”] .dir-arrow { display: inline-block; }
+[dir=“ltr”] .btn-arrow { left: auto; right: 16px; }
+[dir=“rtl”] .btn-arrow { left: 16px; right: auto; }
 </style>
+
 </head>
 <body>
 <div id="flashOverlay"></div>
 
-
 <!-- LOGIN -->
+
 <div class="page active" id="page-login">
   <div class="header">
     <span data-t="appName">نظام الحضور</span>
@@ -341,6 +343,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MAIN -->
+
 <div class="page" id="page-main">
   <div class="header">
     <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><span data-t="dashboard" style="font-size:14px;">لوحة التحكم</span><span id="headerBuilding" style="font-size:10px;color:var(--text3);letter-spacing:0.5px;"></span></div>
@@ -360,6 +363,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- REGISTER EMPLOYEE -->
+
 <div class="page" id="page-register">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackReg"><span class="back-arrow">←</span></button></div>
@@ -374,6 +378,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- TICKET -->
+
 <div class="page" id="page-ticket">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackTicket"><span class="back-arrow">←</span></button></div>
@@ -395,6 +400,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- SCANNER -->
+
 <div class="page" id="page-scanner">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackScan"><span class="back-arrow">←</span></button></div>
@@ -422,6 +428,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- EMPLOYEES PAGE -->
+
 <div class="page" id="page-employees">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackEmp"><span class="back-arrow">←</span></button></div>
@@ -432,6 +439,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- ADMIN PAGE -->
+
 <div class="page" id="page-admin">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackAdmin"><span class="back-arrow">←</span></button></div>
@@ -449,6 +457,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- STATS PAGE -->
+
 <div class="page" id="page-stats">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackStats"><span class="back-arrow">←</span></button></div>
@@ -459,6 +468,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: PRESENT LIST -->
+
 <div class="modal-overlay" id="presentListModal">
   <div class="modal" style="max-height:80vh;display:flex;flex-direction:column;">
     <div class="modal-title" id="presentListTitle">الحاضرون الآن</div>
@@ -470,6 +480,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- AUDIT LOG PAGE -->
+
 <div class="page" id="page-audit">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackAudit">&#8592;</button></div>
@@ -480,6 +491,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MONTHLY REPORT PAGE -->
+
 <div class="page" id="page-monthly">
   <div class="header">
     <div class="header-right"><button class="back-btn" id="bBackMonthly">&#8592;</button></div>
@@ -490,6 +502,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: ADD GUARD -->
+
 <div class="modal-overlay" id="addGuardModal">
   <div class="modal">
     <div class="modal-title" data-t="addNewGuard">إضافة موظف أمن جديد</div>
@@ -507,6 +520,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: EDIT GUARD -->
+
 <div class="modal-overlay" id="editGuardModal">
   <div class="modal">
     <div class="modal-title" data-t="editGuard">تعديل موظف الأمن</div>
@@ -523,6 +537,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: EDIT EMPLOYEE -->
+
 <div class="modal-overlay" id="editEmpModal">
   <div class="modal">
     <div class="modal-title" data-t="editEmp">تعديل بيانات الموظف</div>
@@ -538,6 +553,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: DELETE -->
+
 <div class="modal-overlay" id="deleteModal">
   <div class="modal">
     <div class="modal-title" data-t="confirmDelete">⚠️ تأكيد الحذف</div>
@@ -550,6 +566,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- MODAL: QR CARD -->
+
 <div class="modal-overlay" id="qrModal">
   <div class="modal">
     <div class="modal-title" data-t="empCard">بطاقة الموظف</div>
@@ -1075,19 +1092,20 @@ function loadEmployees(){
 }
 
 function openQrModal(emp){
-  var modal=document.getElementById('qrModal');
-  modal.style.cssText='display:flex !important;z-index:9000;position:fixed;inset:0;background:rgba(0,0,0,0.75);align-items:flex-end;';
-  modal.classList.add('active');
   document.getElementById('qrModalName').textContent=emp.name;
   document.getElementById('qrModalJob').textContent=emp.job;
   document.getElementById('qrModalId').textContent=emp.id;
   var d=new Date();
   document.getElementById('qrModalDate').textContent=d.toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
-  window._dlEmp=emp;
-  // Use direct image URL - works on all devices
-  var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=4';
   var w=document.getElementById('qrModalCanvas');
-  w.innerHTML='<img src="'+qrUrl+'" style="width:180px;height:180px;display:block;" onerror="this.src='https://chart.googleapis.com/chart?chs=180x180&cht=qr&chl='+encodeURIComponent(emp.id)+'&choe=UTF-8'">';
+  w.innerHTML='';
+  // Use image URL - works on all devices including iOS
+  var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=4';
+  w.innerHTML='<img src="'+qrUrl+'" width="180" height="180" style="display:block;">';
+  window._dlEmp=emp;
+  var modal=document.getElementById('qrModal');
+  modal.classList.add('active');
+  modal.style.display='flex';
 }
 
 function openEditEmp(emp){
@@ -1499,14 +1517,12 @@ tap('bBackStats',function(){goToPage('page-main');});
 tap('bQrModalClose',function(){
   var m=document.getElementById('qrModal');
   m.classList.remove('active');
-  m.style.cssText='';
+  m.style.display='';
 });
 tap('bQrModalDownload',function(){
   var emp=window._dlEmp;
   if(!emp)return;
-  // Open high-res QR image in new tab - user can save from there
-  var url='https://api.qrserver.com/v1/create-qr-code/?size=400x400&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=10&format=png';
-  window.open(url,'_blank');
+  window.open('https://api.qrserver.com/v1/create-qr-code/?size=400x400&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=10','_blank');
 });
 
 // Lang buttons (all pages)
@@ -1558,5 +1574,6 @@ applyLang();
   }
 })();
 </script>
+
 </body>
 </html>
