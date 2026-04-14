@@ -211,7 +211,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .att-detail{font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:3px 8px;}
 .att-detail b{color:var(--text);}
 /* MODALS */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:none;align-items:flex-end;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:none;align-items:flex-end;}
 .modal-overlay.active{display:flex;}
 .modal{background:var(--surface);border-radius:24px 24px 0 0;padding:22px;width:100%;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border);}
 .modal-title{font-size:17px;font-weight:700;margin-bottom:14px;}
@@ -1080,10 +1080,10 @@ function loadEmployees(){
       var sec=document.createElement('div');sec.className='section-title';sec.textContent=t('empList');list.appendChild(sec);
       allEmployees.forEach(function(emp){
         var card=document.createElement('div');card.className='card';
-        card.innerHTML='<div class="card-top"><div><div class="card-name">👤 '+emp.name+'</div><div class="card-sub">'+emp.job+' · <span style="font-family:var(--mono);font-size:11px;">'+emp.id+'</span></div></div><div class="card-actions"><button class="card-qr-btn">'+t('card')+'</button><button class="card-edit-btn">'+t('edit')+'</button><button class="card-del-btn">'+t('del')+'</button></div></div>';
-        card.querySelector('.card-qr-btn').addEventListener('click',function(e){e.stopPropagation();e.preventDefault();openQrModal(emp);});
-        card.querySelector('.card-edit-btn').onclick=function(){openEditEmp(emp);};
-        card.querySelector('.card-del-btn').onclick=function(){openDeleteConfirm(t('deleteConfirmEmp')+' "'+emp.name+'"?',function(){deleteEmployeeRow(emp.rowNum);});};
+        card.innerHTML='<div class="card-top"><div><div class="card-name">👤 '+emp.name+'</div><div class="card-sub">'+emp.job+' · <span style="font-family:var(--mono);font-size:11px;">'+emp.id+'</span></div></div><div class="card-actions"><button class="card-qr-btn" data-row="'+emp.rowNum+'">'+t('card')+'</button><button class="card-edit-btn" data-row="'+emp.rowNum+'">'+t('edit')+'</button><button class="card-del-btn" data-row="'+emp.rowNum+'">'+t('del')+'</button></div></div>';
+        card.querySelector('.card-qr-btn').onclick=function(){var r=parseInt(this.getAttribute('data-row'));var e=allEmployees.find(function(x){return x.rowNum===r;});if(e)openQrModal(e);};
+        card.querySelector('.card-edit-btn').onclick=function(){var r=parseInt(this.getAttribute('data-row'));var e=allEmployees.find(function(x){return x.rowNum===r;});if(e)openEditEmp(e);};
+        card.querySelector('.card-del-btn').onclick=function(){var r=parseInt(this.getAttribute('data-row'));var e=allEmployees.find(function(x){return x.rowNum===r;});if(e)openDeleteConfirm(t('deleteConfirmEmp')+' "'+e.name+'"?',function(){deleteEmployeeRow(e.rowNum);});};
         list.appendChild(card);
       });
     }
@@ -1092,20 +1092,18 @@ function loadEmployees(){
 }
 
 function openQrModal(emp){
+  window._dlEmp=emp;
   document.getElementById('qrModalName').textContent=emp.name;
   document.getElementById('qrModalJob').textContent=emp.job;
   document.getElementById('qrModalId').textContent=emp.id;
   var d=new Date();
   document.getElementById('qrModalDate').textContent=d.toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
   var w=document.getElementById('qrModalCanvas');
-  w.innerHTML='';
-  // Use image URL - works on all devices including iOS
   var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=4';
-  w.innerHTML='<img src="'+qrUrl+'" width="180" height="180" style="display:block;">';
-  window._dlEmp=emp;
+  w.innerHTML='<img src="'+qrUrl+'" width="180" height="180" style="display:block;border-radius:8px;">';
   var modal=document.getElementById('qrModal');
-  modal.classList.add('active');
   modal.style.display='flex';
+  modal.classList.add('active');
 }
 
 function openEditEmp(emp){
