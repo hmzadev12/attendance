@@ -1083,28 +1083,11 @@ function openQrModal(emp){
   document.getElementById('qrModalId').textContent=emp.id;
   var d=new Date();
   document.getElementById('qrModalDate').textContent=d.toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
-  var w=document.getElementById('qrModalCanvas');
-  w.innerHTML='';
-  // Store emp for download
   window._dlEmp=emp;
-  setTimeout(function(){
-    try{
-      // Remove any previous QR
-      w.innerHTML='';
-      var qr=new QRCode(w,{
-        text:emp.id,
-        width:160,
-        height:160,
-        colorDark:'#0f172a',
-        colorLight:'#ffffff',
-        correctLevel:QRCode.CorrectLevel.H,
-        useSVG:false
-      });
-    }catch(e){
-      // Fallback: show as image via Google QR API
-      w.innerHTML='<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data='+encodeURIComponent(emp.id)+'" style="width:160px;height:160px;" crossorigin="anonymous">';
-    }
-  },120);
+  // Use direct image URL - works on all devices
+  var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=4';
+  var w=document.getElementById('qrModalCanvas');
+  w.innerHTML='<img src="'+qrUrl+'" style="width:180px;height:180px;display:block;" onerror="this.src='https://chart.googleapis.com/chart?chs=180x180&cht=qr&chl='+encodeURIComponent(emp.id)+'&choe=UTF-8'">';
 }
 
 function openEditEmp(emp){
@@ -1521,21 +1504,9 @@ tap('bQrModalClose',function(){
 tap('bQrModalDownload',function(){
   var emp=window._dlEmp;
   if(!emp)return;
-  // Try html2canvas first
-  if(typeof html2canvas!=='undefined'){
-    html2canvas(document.getElementById('qrModalCard'),{scale:3,useCORS:true,backgroundColor:'#ffffff',allowTaint:true}).then(function(c){
-      var a=document.createElement('a');
-      a.download=emp.id+' - '+emp.name+'.png';
-      a.href=c.toDataURL('image/png');
-      a.click();
-    }).catch(function(){
-      // Fallback: open QR image in new tab
-      window.open('https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(emp.id),'_blank');
-    });
-  } else {
-    // Fallback: open QR image in new tab
-    window.open('https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(emp.id),'_blank');
-  }
+  // Open high-res QR image in new tab - user can save from there
+  var url='https://api.qrserver.com/v1/create-qr-code/?size=400x400&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=10&format=png';
+  window.open(url,'_blank');
 });
 
 // Lang buttons (all pages)
