@@ -1067,7 +1067,6 @@ function loadEmployees(){
   list.innerHTML='<div class="empty-state">'+t('loading')+'</div>';
   callAPI({action:'getEmployees',token:AUTH_TOKEN}).then(function(employees){
     allEmployees=employees||[];
-    window._emps=allEmployees;
     list.innerHTML='';
     var banner=document.createElement('div');banner.className='emp-header-banner';
     if(allEmployees.length===0){
@@ -1081,9 +1080,8 @@ function loadEmployees(){
       var sec=document.createElement('div');sec.className='section-title';sec.textContent=t('empList');list.appendChild(sec);
       allEmployees.forEach(function(emp){
         var card=document.createElement('div');card.className='card';
-        var ci=allEmployees.indexOf(emp);
-        card.innerHTML='<div class="card-top"><div><div class="card-name">👤 '+emp.name+'</div><div class="card-sub">'+emp.job+' · <span style="font-family:var(--mono);font-size:11px;">'+emp.id+'</span></div></div><div class="card-actions"><button class="card-qr-btn" onclick="openQrModal(window._emps['+ci+'])">'+t('card')+'</button><button class="card-edit-btn" onclick="openEditEmp(window._emps['+ci+'])">'+t('edit')+'</button><button class="card-del-btn" onclick="openDeleteConfirm(t(\'deleteConfirmEmp\')+\' \"\'+window._emps['+ci+'].name+\'\"?',function(){deleteEmployeeRow(window._emps['+ci+'].rowNum);})">'+t('del')+'</button></div></div>';
-
+        var _i=allEmployees.indexOf(emp);
+        card.innerHTML='<div class="card-top"><div><div class="card-name">👤 '+emp.name+'</div><div class="card-sub">'+emp.job+' · <span style="font-family:var(--mono);font-size:11px;">'+emp.id+'</span></div></div><div class="card-actions"><button class="card-qr-btn" onclick="openQrModal(allEmployees['+_i+'])">'+t('card')+'</button><button class="card-edit-btn" onclick="openEditEmp(allEmployees['+_i+'])">'+t('edit')+'</button><button class="card-del-btn" onclick="openDeleteConfirm(t('deleteConfirmEmp')+' &quot;'+allEmployees['+_i+'].name+'&quot;?',function(){deleteEmployeeRow(allEmployees['+_i+'].rowNum)})">'+t('del')+'</button></div></div>';
         list.appendChild(card);
       });
     }
@@ -1099,10 +1097,9 @@ function openQrModal(emp){
   document.getElementById('qrModalId').textContent=emp.id;
   var d=new Date();
   document.getElementById('qrModalDate').textContent=d.toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
-  var w=document.getElementById('qrModalCanvas');
-  w.innerHTML='<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=4" width="180" height="180" style="display:block;border-radius:8px;">';
+  document.getElementById('qrModalCanvas').innerHTML='<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=4" width="180" height="180" style="display:block;border-radius:8px;">';
   var modal=document.getElementById('qrModal');
-  modal.style.cssText='display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;align-items:flex-end;';
+  modal.style.display='flex';
   modal.classList.add('active');
 }
 
@@ -1515,7 +1512,7 @@ tap('bBackStats',function(){goToPage('page-main');});
 tap('bQrModalClose',function(){
   var m=document.getElementById('qrModal');
   m.classList.remove('active');
-  m.style.cssText='';
+  m.style.display='';
 });
 tap('bQrModalDownload',function(){
   var emp=window._dlEmp;
