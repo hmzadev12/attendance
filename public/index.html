@@ -111,9 +111,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .card-name{font-size:15px;font-weight:600;}
 .card-sub{font-size:12px;color:var(--text2);margin-top:2px;}
 .card-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
-.card-edit-btn{cursor:pointer;padding:6px 12px;font-size:12px;font-weight:600;background:rgba(59,130,246,0.1);color:var(--accent);border:1px solid rgba(59,130,246,0.2);border-radius:8px;cursor:pointer;font-family:var(--font);}
-.card-del-btn{cursor:pointer;padding:6px 12px;font-size:12px;font-weight:600;background:rgba(239,68,68,0.08);color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:8px;cursor:pointer;font-family:var(--font);}
-.card-qr-btn{cursor:pointer;padding:6px 12px;font-size:12px;font-weight:600;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);border-radius:8px;cursor:pointer;font-family:var(--font);}
+.card-edit-btn{padding:6px 12px;font-size:12px;font-weight:600;background:rgba(59,130,246,0.1);color:var(--accent);border:1px solid rgba(59,130,246,0.2);border-radius:8px;cursor:pointer;font-family:var(--font);}
+.card-del-btn{padding:6px 12px;font-size:12px;font-weight:600;background:rgba(239,68,68,0.08);color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:8px;cursor:pointer;font-family:var(--font);}
+.card-qr-btn{padding:6px 12px;font-size:12px;font-weight:600;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);border-radius:8px;cursor:pointer;font-family:var(--font);}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px;}
 .chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--text2);}
 .chip.empty{color:var(--text3);font-style:italic;}
@@ -211,7 +211,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .att-detail{font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:3px 8px;}
 .att-detail b{color:var(--text);}
 /* MODALS */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:none;align-items:flex-end;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:none;align-items:flex-end;}
 .modal-overlay.active{display:flex;}
 .modal{background:var(--surface);border-radius:24px 24px 0 0;padding:22px;width:100%;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border);}
 .modal-title{font-size:17px;font-weight:700;margin-bottom:14px;}
@@ -1067,6 +1067,7 @@ function loadEmployees(){
   list.innerHTML='<div class="empty-state">'+t('loading')+'</div>';
   callAPI({action:'getEmployees',token:AUTH_TOKEN}).then(function(employees){
     allEmployees=employees||[];
+    window._emps=allEmployees;
     list.innerHTML='';
     var banner=document.createElement('div');banner.className='emp-header-banner';
     if(allEmployees.length===0){
@@ -1080,68 +1081,18 @@ function loadEmployees(){
       var sec=document.createElement('div');sec.className='section-title';sec.textContent=t('empList');list.appendChild(sec);
       allEmployees.forEach(function(emp){
         var card=document.createElement('div');card.className='card';
-        card.innerHTML='<div class="card-top"><div><div class="card-name">👤 '+emp.name+'</div><div class="card-sub">'+emp.job+' · <span style="font-family:var(--mono);font-size:11px;">'+emp.id+'</span></div></div><div class="card-actions"><button class="card-qr-btn" data-row="'+emp.rowNum+'">'+t('card')+'</button><button class="card-edit-btn" data-row="'+emp.rowNum+'">'+t('edit')+'</button><button class="card-del-btn" data-row="'+emp.rowNum+'">'+t('del')+'</button></div></div>';
-        // handled by delegation
+        var ci=allEmployees.indexOf(emp);
+        card.innerHTML='<div class="card-top"><div><div class="card-name">👤 '+emp.name+'</div><div class="card-sub">'+emp.job+' · <span style="font-family:var(--mono);font-size:11px;">'+emp.id+'</span></div></div><div class="card-actions"><button class="card-qr-btn" onclick="openQrModal(window._emps['+ci+'])">'+t('card')+'</button><button class="card-edit-btn" onclick="openEditEmp(window._emps['+ci+'])">'+t('edit')+'</button><button class="card-del-btn" onclick="openDeleteConfirm(t(\'deleteConfirmEmp\')+\' \"\'+window._emps['+ci+'].name+\'\"?',function(){deleteEmployeeRow(window._emps['+ci+'].rowNum);})">'+t('del')+'</button></div></div>';
+
         list.appendChild(card);
       });
     }
     var addBtn=document.createElement('button');addBtn.className='submit-btn';addBtn.textContent=t('addNewEmp');addBtn.onclick=function(){goToPage('page-register');};list.appendChild(addBtn);
-    // iOS-safe event delegation on the list container
-    list.ontouchend=function(ev){
-      var btn=ev.target;
-      while(btn&&btn!==list){
-        if(btn.classList&&btn.classList.contains('card-qr-btn')){
-          ev.preventDefault();
-          var r=parseInt(btn.getAttribute('data-row'));
-          var emp=allEmployees.find(function(x){return x.rowNum===r;});
-          if(emp)openQrModal(emp);
-          return;
-        }
-        if(btn.classList&&btn.classList.contains('card-edit-btn')){
-          ev.preventDefault();
-          var r=parseInt(btn.getAttribute('data-row'));
-          var emp=allEmployees.find(function(x){return x.rowNum===r;});
-          if(emp)openEditEmp(emp);
-          return;
-        }
-        if(btn.classList&&btn.classList.contains('card-del-btn')){
-          ev.preventDefault();
-          var r=parseInt(btn.getAttribute('data-row'));
-          var emp=allEmployees.find(function(x){return x.rowNum===r;});
-          if(emp)openDeleteConfirm(t('deleteConfirmEmp')+' "'+emp.name+'"?',function(){deleteEmployeeRow(emp.rowNum);});
-          return;
-        }
-        btn=btn.parentElement;
-      }
-    };
-    list.onclick=function(ev){
-      var btn=ev.target;
-      while(btn&&btn!==list){
-        if(btn.classList&&btn.classList.contains('card-qr-btn')){
-          var r=parseInt(btn.getAttribute('data-row'));
-          var emp=allEmployees.find(function(x){return x.rowNum===r;});
-          if(emp)openQrModal(emp);
-          return;
-        }
-        if(btn.classList&&btn.classList.contains('card-edit-btn')){
-          var r=parseInt(btn.getAttribute('data-row'));
-          var emp=allEmployees.find(function(x){return x.rowNum===r;});
-          if(emp)openEditEmp(emp);
-          return;
-        }
-        if(btn.classList&&btn.classList.contains('card-del-btn')){
-          var r=parseInt(btn.getAttribute('data-row'));
-          var emp=allEmployees.find(function(x){return x.rowNum===r;});
-          if(emp)openDeleteConfirm(t('deleteConfirmEmp')+' "'+emp.name+'"?',function(){deleteEmployeeRow(emp.rowNum);});
-          return;
-        }
-        btn=btn.parentElement;
-      }
-    };
   }).catch(function(e){list.innerHTML='<div class="empty-state">Error: '+e.message+'</div>';});
 }
 
 function openQrModal(emp){
+  if(!emp)return;
   window._dlEmp=emp;
   document.getElementById('qrModalName').textContent=emp.name;
   document.getElementById('qrModalJob').textContent=emp.job;
@@ -1149,10 +1100,9 @@ function openQrModal(emp){
   var d=new Date();
   document.getElementById('qrModalDate').textContent=d.toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
   var w=document.getElementById('qrModalCanvas');
-  var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=4';
-  w.innerHTML='<img src="'+qrUrl+'" width="180" height="180" style="display:block;border-radius:8px;">';
+  w.innerHTML='<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'&color=0f172a&bgcolor=ffffff&margin=4" width="180" height="180" style="display:block;border-radius:8px;">';
   var modal=document.getElementById('qrModal');
-  modal.style.display='flex';
+  modal.style.cssText='display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;align-items:flex-end;';
   modal.classList.add('active');
 }
 
@@ -1565,7 +1515,7 @@ tap('bBackStats',function(){goToPage('page-main');});
 tap('bQrModalClose',function(){
   var m=document.getElementById('qrModal');
   m.classList.remove('active');
-  m.style.display='';
+  m.style.cssText='';
 });
 tap('bQrModalDownload',function(){
   var emp=window._dlEmp;
