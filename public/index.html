@@ -1081,7 +1081,7 @@ function loadEmployees(){
       allEmployees.forEach(function(emp){
         var card=document.createElement('div');card.className='card';
         card.innerHTML='<div class="card-top"><div><div class="card-name">👤 '+emp.name+'</div><div class="card-sub">'+emp.job+' · <span style="font-family:var(--mono);font-size:11px;">'+emp.id+'</span></div></div><div class="card-actions"><button class="card-qr-btn">'+t('card')+'</button><button class="card-edit-btn">'+t('edit')+'</button><button class="card-del-btn">'+t('del')+'</button></div></div>';
-        card.querySelector('.card-qr-btn').onclick=function(e){if(e)e.stopPropagation();openQrModal(emp);};
+        card.querySelector('.card-qr-btn').onclick=function(){openQrModal(emp);};
         card.querySelector('.card-edit-btn').onclick=function(){openEditEmp(emp);};
         card.querySelector('.card-del-btn').onclick=function(){openDeleteConfirm(t('deleteConfirmEmp')+' "'+emp.name+'"?',function(){deleteEmployeeRow(emp.rowNum);});};
         list.appendChild(card);
@@ -1091,7 +1091,7 @@ function loadEmployees(){
   }).catch(function(e){list.innerHTML='<div class="empty-state">Error: '+e.message+'</div>';});
 }
 
-function openQrModal(emp){window._dlEmp=emp;
+function openQrModal(emp){
   document.getElementById('qrModalName').textContent=emp.name;
   document.getElementById('qrModalJob').textContent=emp.job;
   document.getElementById('qrModalId').textContent=emp.id;
@@ -1099,7 +1099,8 @@ function openQrModal(emp){window._dlEmp=emp;
   document.getElementById('qrModalDate').textContent=d.toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{year:'numeric',month:'long',day:'numeric'});
   var w=document.getElementById('qrModalCanvas');
   w.innerHTML='';
-  w.innerHTML='<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'" width="180" height="180" style="display:block">';
+  w.innerHTML='<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(emp.id)+'" width="180" height="180">';
+  window._dlEmp=emp;
   var modal=document.getElementById('qrModal');
   modal.classList.add('active');
   modal.style.display='flex';
@@ -1516,7 +1517,11 @@ tap('bQrModalClose',function(){
   m.classList.remove('active');
   m.style.display='';
 });
-tap('bQrModalDownload',function(){var e=window._dlEmp;if(!e)return;window.open('https://api.qrserver.com/v1/create-qr-code/?size=400x400&data='+encodeURIComponent(e.id),'_blank');});
+tap('bQrModalDownload',function(){
+  var e=window._dlEmp;
+  if(!e)return;
+  window.open('https://api.qrserver.com/v1/create-qr-code/?size=400x400&data='+encodeURIComponent(e.id),'_blank');
+});
 
 // Lang buttons (all pages)
 ['globalLangBtn','mainLangBtn','regLangBtn','ticketLangBtn','scanLangBtn','empLangBtn','adminLangBtn','statsLangBtn'].forEach(function(id){
